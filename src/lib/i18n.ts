@@ -1,0 +1,63 @@
+import type { Locale } from "@/lib/types";
+
+export const locales: Locale[] = ["tr", "en", "el", "ru", "de"];
+
+export const localeLabels: Record<Locale, string> = {
+  tr: "Türkçe",
+  en: "English",
+  el: "Ελληνικά",
+  ru: "Русский",
+  de: "Deutsch",
+};
+
+const tr = {
+  brandLine: "Akıllı klinik yönetimi",
+  signIn: "Giriş yap",
+  signUp: "Üye ol",
+  fullName: "Ad soyad",
+  email: "E-posta",
+  phone: "Telefon",
+  password: "Şifre",
+  passwordHint: "En az 8 karakter",
+  authIdentity: "E-posta veya telefon",
+  accountQuestion: "Hesabın yok mu?",
+  alreadyAccount: "Zaten hesabın var mı?",
+  registrationInfo: "Yeni kayıtların tamamı güvenli şekilde Danışan rolüyle açılır.",
+  verificationSent: "Doğrulama bağlantısı/kodu gönderildi. Hesabını doğruladıktan sonra giriş yapabilirsin.",
+  dashboard: "Genel Bakış",
+  appointments: "Randevular",
+  clients: "Danışanlar",
+  payments: "Ödemeler",
+  mealPlans: "Menü Planları",
+  measurements: "Ölçümler",
+  loyalty: "Sadakat",
+  community: "Topluluk",
+  team: "Ekip ve Roller",
+  settings: "Ayarlar",
+  signOut: "Çıkış",
+  owner: "Klinik Sahibi",
+  dietitian: "Diyetisyen",
+  secretary: "Sekreter",
+  client: "Danışan",
+  welcome: "Hoş geldin",
+  bookAppointment: "Randevu oluştur",
+  newAppointment: "Yeni randevu",
+  save: "Kaydet",
+  cancel: "İptal",
+  status: "Durum",
+  role: "Rol",
+  updateRole: "Rolü güncelle",
+  noData: "Henüz kayıt yok.",
+  claimOwner: "İlk klinik sahibi hesabını etkinleştir",
+  claimOwnerHelp: "Bu düğme yalnızca sistemde henüz klinik sahibi yoksa çalışır. İlk kurulumdan sonra kapanır.",
+  setupRequired: "Supabase bağlantısı eksik",
+  setupRequiredText: ".env.local dosyasına Supabase URL ve anahtarını ekleyip SQL migration dosyasını çalıştır.",
+};
+
+export const dictionaries: Record<Locale, typeof tr> = {
+  tr,
+  en: { ...tr, brandLine: "Smart clinic management", signIn: "Sign in", signUp: "Create account", fullName: "Full name", email: "Email", phone: "Phone", password: "Password", authIdentity: "Email or phone", registrationInfo: "Every new account is created with the Client role.", dashboard: "Overview", appointments: "Appointments", clients: "Clients", payments: "Payments", mealPlans: "Meal Plans", measurements: "Measurements", loyalty: "Loyalty", community: "Community", team: "Team & Roles", settings: "Settings", signOut: "Sign out", owner: "Clinic Owner", dietitian: "Dietitian", secretary: "Secretary", client: "Client", welcome: "Welcome", bookAppointment: "Book appointment", newAppointment: "New appointment", save: "Save", cancel: "Cancel", status: "Status", role: "Role", updateRole: "Update role", noData: "No records yet." },
+  el: { ...tr, brandLine: "Έξυπνη διαχείριση κλινικής", signIn: "Σύνδεση", signUp: "Εγγραφή", fullName: "Ονοματεπώνυμο", email: "Email", phone: "Τηλέφωνο", password: "Κωδικός", authIdentity: "Email ή τηλέφωνο", registrationInfo: "Κάθε νέος λογαριασμός δημιουργείται ως Πελάτης.", dashboard: "Επισκόπηση", appointments: "Ραντεβού", clients: "Πελάτες", payments: "Πληρωμές", mealPlans: "Πλάνα Διατροφής", measurements: "Μετρήσεις", loyalty: "Επιβράβευση", community: "Κοινότητα", team: "Ομάδα & Ρόλοι", settings: "Ρυθμίσεις", signOut: "Αποσύνδεση", owner: "Ιδιοκτήτης Κλινικής", dietitian: "Διαιτολόγος", secretary: "Γραμματέας", client: "Πελάτης", welcome: "Καλώς ήρθατε", bookAppointment: "Κλείστε ραντεβού", newAppointment: "Νέο ραντεβού", save: "Αποθήκευση", cancel: "Ακύρωση", status: "Κατάσταση", role: "Ρόλος", updateRole: "Ενημέρωση ρόλου", noData: "Δεν υπάρχουν εγγραφές." },
+  ru: { ...tr, brandLine: "Умное управление клиникой", signIn: "Войти", signUp: "Регистрация", fullName: "Имя и фамилия", email: "Email", phone: "Телефон", password: "Пароль", authIdentity: "Email или телефон", registrationInfo: "Каждая новая учетная запись создается с ролью Клиент.", dashboard: "Обзор", appointments: "Записи", clients: "Клиенты", payments: "Платежи", mealPlans: "Планы питания", measurements: "Измерения", loyalty: "Лояльность", community: "Сообщество", team: "Команда и роли", settings: "Настройки", signOut: "Выйти", owner: "Владелец клиники", dietitian: "Диетолог", secretary: "Секретарь", client: "Клиент", welcome: "Добро пожаловать", bookAppointment: "Записаться", newAppointment: "Новая запись", save: "Сохранить", cancel: "Отмена", status: "Статус", role: "Роль", updateRole: "Обновить роль", noData: "Записей пока нет." },
+  de: { ...tr, brandLine: "Intelligente Praxisverwaltung", signIn: "Anmelden", signUp: "Registrieren", fullName: "Vor- und Nachname", email: "E-Mail", phone: "Telefon", password: "Passwort", authIdentity: "E-Mail oder Telefon", registrationInfo: "Jedes neue Konto wird mit der Rolle Klient erstellt.", dashboard: "Übersicht", appointments: "Termine", clients: "Klienten", payments: "Zahlungen", mealPlans: "Ernährungspläne", measurements: "Messungen", loyalty: "Treue", community: "Community", team: "Team & Rollen", settings: "Einstellungen", signOut: "Abmelden", owner: "Praxisinhaber", dietitian: "Ernährungsberater", secretary: "Sekretariat", client: "Klient", welcome: "Willkommen", bookAppointment: "Termin buchen", newAppointment: "Neuer Termin", save: "Speichern", cancel: "Abbrechen", status: "Status", role: "Rolle", updateRole: "Rolle aktualisieren", noData: "Noch keine Einträge." },
+};
