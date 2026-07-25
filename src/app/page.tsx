@@ -13,8 +13,7 @@ export default async function Home() {
   const { data: { user } } = await supabase.auth.getUser();
   if (user) redirect(isPlatformAdminEmail(user.email) ? "/platform-admin" : "/dashboard");
 
-  const salesEmail = process.env.NEXT_PUBLIC_SALES_EMAIL || "hello@nutriclinic.ai";
-  return (
+    return (
     <main className="marketing-page">
       <header className="marketing-nav">
         <div className="brand"><span><Apple size={21}/></span><b>NutriClinic AI</b></div>
@@ -27,7 +26,7 @@ export default async function Home() {
           <span className="marketing-pill"><Sparkles size={15}/>Diyetisyen klinikleri için işletim sistemi</span>
           <h1>Randevudan menüye, ödemeden danışan takibine kadar kliniğiniz tek panelde.</h1>
           <p>NutriClinic AI; diyetisyen, sekreter ve danışan süreçlerini ayrı yetkilerle yöneten; yapay zekâ destekli, çok dilli klinik yönetim platformudur.</p>
-          <div className="marketing-actions"><a className="primary-button" href="/login">Davet koduyla başla<ArrowRight size={17}/></a><a className="secondary-button" href={`mailto:${salesEmail}?subject=NutriClinic%20AI%20Pilot%20Başvurusu`}>Pilot başvurusu</a></div>
+          <div className="marketing-actions"><a className="primary-button" href="/login?mode=register">Ücretsiz hesap oluştur<ArrowRight size={17}/></a><a className="secondary-button" href="/pilot-application">Pilot başvurusu</a><a className="text-button" href="/login">Davet kodum var</a></div>
           <div className="marketing-proof"><span><CheckCircle2/>Kurulum gerektirmeyen klinik workspace</span><span><CheckCircle2/>Rol bazlı veri erişimi</span><span><CheckCircle2/>Web ve mobil uyumlu PWA</span></div>
         </div>
         <div className="marketing-dashboard-preview">
@@ -59,7 +58,7 @@ export default async function Home() {
         <div className="pilot-process"><article><span>1</span><b>Klinik seçimi</b><p>Farklı çalışma modellerinden 3–5 diyetisyen veya klinik belirlenir.</p></article><article><span>2</span><b>90 günlük pilot</b><p>Klinik davet koduyla kendi izole alanını kurar ve gerçek kullanım başlar.</p></article><article><span>3</span><b>Haftalık geri bildirim</b><p>Panel içindeki pilot geri bildirim aracıyla hata ve öneriler toplanır.</p></article><article><span>4</span><b>Ücretli dönüşüm</b><p>Pilot sonunda kullanım, değer ve ihtiyaçlara göre uygun plan sunulur.</p></article></div>
       </section>
 
-      <section id="security" className="marketing-security"><ShieldCheck size={42}/><div><span className="section-kicker">TENANT İZOLASYONU</span><h2>Her kliniğin verisi ayrı erişim kurallarıyla korunur.</h2><p>Kullanıcılar yalnızca davet edildikleri kliniğe bağlanır. Klinik üyeliği ve rolü veritabanı seviyesinde doğrulanır; danışan, diyetisyen ve sekreter erişimleri ayrı tutulur.</p></div></section>
+      <section id="security" className="marketing-security"><ShieldCheck size={42}/><div><span className="section-kicker">TENANT İZOLASYONU</span><h2>Her kliniğin verisi ayrı erişim kurallarıyla korunur.</h2><p>Kullanıcılar hesaplarını açık kayıt ekranından oluşturabilir; klinik ve rol erişimi yalnızca güvenli davet koduyla etkinleşir. Klinik üyeliği ve rolü veritabanı seviyesinde doğrulanır; danışan, diyetisyen ve sekreter erişimleri ayrı tutulur.</p></div></section>
 
 
     </main>

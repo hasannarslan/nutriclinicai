@@ -18,16 +18,17 @@ export async function GET() {
   if (!user) return NextResponse.json({ error: "Yetkisiz erişim" }, { status: 403 });
   try {
     const admin = createAdminClient();
-    const [clinicsResult, subscriptionsResult, membershipsResult, clientsResult, invitesResult, feedbackResult, plansResult] = await Promise.all([
+    const [clinicsResult, subscriptionsResult, membershipsResult, clientsResult, invitesResult, applicationsResult, feedbackResult, plansResult] = await Promise.all([
       admin.from("clinics").select("id,name,slug,status,default_locale,timezone,created_at,updated_at").order("created_at", { ascending: false }),
       admin.from("clinic_subscriptions").select("clinic_id,plan_slug,status,pilot_started_at,pilot_ends_at,current_period_ends_at,updated_at"),
       admin.from("clinic_memberships").select("clinic_id,role,is_active"),
       admin.from("client_profiles").select("clinic_id,is_active"),
       admin.from("pilot_invites").select("id,token,label,contact_email,plan_slug,pilot_days,max_uses,used_count,expires_at,is_active,created_by_email,created_at").order("created_at", { ascending: false }).limit(100),
+      admin.from("pilot_applications").select("id,full_name,email,phone,applicant_type,clinic_name,city,team_size,active_client_count,uses_devices,message,status,admin_note,created_at,updated_at").order("created_at", { ascending: false }).limit(200),
       admin.from("pilot_feedback").select("id,clinic_id,user_id,category,rating,message,page_path,status,admin_note,created_at").order("created_at", { ascending: false }).limit(100),
       admin.from("subscription_plans").select("slug,name,monthly_price_try,max_dietitians,max_staff,max_active_clients,monthly_ai_credits,is_public,is_active,sort_order").order("sort_order"),
     ]);
-    const firstError = [clinicsResult, subscriptionsResult, membershipsResult, clientsResult, invitesResult, feedbackResult, plansResult].find((result) => result.error)?.error;
+    const firstError = [clinicsResult, subscriptionsResult, membershipsResult, clientsResult, invitesResult, applicationsResult, feedbackResult, plansResult].find((result) => result.error)?.error;
     if (firstError) throw firstError;
 
     const subscriptions = new Map((subscriptionsResult.data || []).map((row) => [row.clinic_id, row]));
@@ -56,6 +57,7 @@ export async function GET() {
     return NextResponse.json({
       clinics,
       pilotInvites: invitesResult.data || [],
+      pilotApplications: applicationsResult.data || [],
       feedback: feedbackResult.data || [],
       plans: plansResult.data || [],
       metrics: {
@@ -64,6 +66,7 @@ export async function GET() {
         activeUsers: (membershipsResult.data || []).filter((row) => row.is_active).length,
         activeClients: (clientsResult.data || []).filter((row) => row.is_active).length,
         openFeedback: (feedbackResult.data || []).filter((row) => row.status === "new" || row.status === "reviewing").length,
+        openApplications: (applicationsResult.data || []).filter((row) => row.status === "new" || row.status === "contacted").length,
       },
     });
   } catch (error) {
@@ -137,6 +140,25 @@ export async function POST(request: Request) {
       const inviteId = String(body.invite_id || "");
       const isActive = Boolean(body.is_active);
       const { error } = await admin.from("pilot_invites").update({ is_active: isActive, updated_at: new Date().toISOString() }).eq("id", inviteId);
+      if (error) throw error;
+      return NextResponse.json({ ok: true });
+    }
+
+
+    if (action === "update_pilot_application") {
+      const applicationId = String(body.application_id || "");
+      const status = String(body.status || "contacted");
+      const adminNote = String(body.admin_note || "").trim() || null;
+      if (!["new", "contacted", "approved", "waitlist", "rejected", "closed"].includes(status)) {
+        return NextResponse.json({ error: "Başvuru durumu geçersiz" }, { status: 400 });
+      }
+      const { error } = await admin.from("pilot_applications").update({
+        status,
+        admin_note: adminNote,
+        reviewed_by_email: user.email,
+        reviewed_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
+      }).eq("id", applicationId);
       if (error) throw error;
       return NextResponse.json({ ok: true });
     }

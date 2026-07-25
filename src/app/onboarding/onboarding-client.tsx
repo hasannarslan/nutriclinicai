@@ -88,7 +88,7 @@ export default function OnboardingClient({
         <div className="onboarding-copy">
           <span className="section-kicker">KLİNİK KURULUMU</span>
           <h1>Hesabınızı doğru kliniğe bağlayın.</h1>
-          <p>{email ? `${email} hesabı` : "Hesabınız"} oluşturuldu. Klinik verilerinin birbirinden tamamen ayrılması için yalnızca davet koduyla devam edilir.</p>
+          <p>{email ? `${email} hesabı` : "Hesabınız"} oluşturuldu. Hesabınız hazır. Klinik verilerinin birbirinden ayrılması ve rolünüzün güvenli biçimde belirlenmesi için klinik veya pilot davet koduyla devam edin.</p>
         </div>
 
         <div className="onboarding-mode-grid">
@@ -127,7 +127,7 @@ export default function OnboardingClient({
           {message && <p className="form-message success">{message}</p>}
         </section>
 
-        <p className="onboarding-help">Davet kodunuz yoksa NutriClinic AI pilot yöneticinizle veya kliniğinizin sahibiyle iletişime geçin.</p>
+        <p className="onboarding-help">Davet kodunuz yoksa kliniğinizin sahibinden davet isteyin. Klinik sahibi veya bağımsız diyetisyenseniz <a href="/pilot-application">pilot programına başvurun</a>.</p>
       </section>
     </main>
   );

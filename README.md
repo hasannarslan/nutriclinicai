@@ -124,3 +124,21 @@ npm run lint
 ## v7.1 — Pilot kliniğe özel bağlantı
 
 Platform Admin → Pilot davetleri ekranında her klinik için tam ve benzersiz kayıt bağlantısı görünür şekilde üretilir. Oluşturulan bağlantı ekranda kalır; Kopyala ve Aç düğmeleri bulunur. Aktif pilot davetleri listesinde de yalnızca token değil tam URL gösterilir. `NEXT_PUBLIC_APP_URL` Vercel alan adınız olarak tanımlanırsa bağlantılar otomatik olarak production domainiyle oluşur. Bu sürüm için yeni Supabase migrationı gerekmez.
+
+## v7.3 — Açık kayıt ve pilot başvuru
+
+v7.3 ile kullanıcı hesabı oluşturma herkese açılmıştır. Güvenlik nedeniyle hesap oluştururken seçilen kullanım amacı doğrudan Klinik Sahibi, Diyetisyen veya Sekreter yetkisi vermez. Gerçek klinik rolü, Klinik Sahibinin oluşturduğu davet kodu veya Platform Admin tarafından onaylanan pilot bağlantısı ile etkinleşir.
+
+Mevcut v7.2 veritabanında yalnızca şu migration çalıştırılmalıdır:
+
+```text
+supabase/migrations/020_public_registration_and_pilot_applications.sql
+```
+
+Akış:
+
+1. Danışan, diyetisyen veya sekreter `/login?mode=register` üzerinden hesabını oluşturur.
+2. Hesap doğrulandıktan sonra giriş yapar.
+3. Klinik davet kodunu `/onboarding` ekranında girer.
+4. Klinik sahibi veya bağımsız diyetisyen `/pilot-application` formuyla pilot başvurusu yapar.
+5. Platform Admin başvuruyu `/platform-admin` içindeki **Pilot başvuruları** sekmesinde görür ve özel pilot bağlantısı oluşturur.

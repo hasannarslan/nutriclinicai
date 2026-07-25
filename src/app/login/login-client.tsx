@@ -10,9 +10,10 @@ import type { Locale } from "@/lib/types";
 export default function LoginClient({ configured, platformSetupAllowed }: { configured: boolean; platformSetupAllowed: boolean }) {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const [mode, setMode] = useState<"login" | "register">("login");
+  const [mode, setMode] = useState<"login" | "register">(searchParams.get("mode") === "register" ? "register" : "login");
   const [locale, setLocale] = useState<Locale>("tr");
   const [fullName, setFullName] = useState("");
+  const [accountIntent, setAccountIntent] = useState("client");
   const [email, setEmail] = useState("");
   const [phone, setPhone] = useState("");
   const [identity, setIdentity] = useState("");
@@ -52,7 +53,6 @@ export default function LoginClient({ configured, platformSetupAllowed }: { conf
 
   async function signUp() {
     setError(""); setMessage("");
-    if (!pilotToken && !inviteToken && !platformSetupAllowed) return setError("Yeni hesap oluşturmak için klinik veya pilot davet bağlantısı gereklidir.");
     if (!fullName.trim()) return setError("Ad soyad zorunludur.");
     if (!email.trim() && !phone.trim()) return setError("E-posta veya telefon bilgilerinden biri zorunludur.");
     if (password.length < 8) return setError("Şifre en az 8 karakter olmalıdır.");
@@ -65,6 +65,7 @@ export default function LoginClient({ configured, platformSetupAllowed }: { conf
           contact_email: email.trim() || null,
           contact_phone: phone.trim() || null,
           preferred_locale: locale,
+          account_intent: accountIntent,
         },
         emailRedirectTo: `${window.location.origin}/auth/callback?next=${encodeURIComponent(nextPath)}`,
       };
@@ -86,8 +87,8 @@ export default function LoginClient({ configured, platformSetupAllowed }: { conf
         setPhone("");
         setMode("login");
         setMessage(data.session
-          ? "Üyeliğin oluşturuldu. Şimdi giriş yapabilirsin."
-          : `${t.verificationSent} Doğruladıktan sonra bu ekrandan giriş yapabilirsin.`);
+          ? "Üyeliğin oluşturuldu. Şimdi giriş yapabilir ve klinik davet kodunu girebilirsin."
+          : `${t.verificationSent} Doğruladıktan sonra giriş yapıp klinik davet kodunu kullanabilirsin.`);
       }
     } catch (err) {
       setError(err instanceof Error ? err.message : "Kayıt oluşturulamadı.");
@@ -135,7 +136,7 @@ export default function LoginClient({ configured, platformSetupAllowed }: { conf
           <h1>Kliniğiniz, danışanlarınız ve beslenme süreçleri tek platformda.</h1>
           <p>Gerçek kullanıcı hesapları, güvenli rol yönetimi, randevular, ölçümler ve kişiye özel beslenme planları.</p>
         </div>
-        <div className="trust-row"><ShieldCheck size={18}/> Her kullanıcı yalnızca davet edildiği kliniğe ve kendisine verilen role bağlanır.</div>
+        <div className="trust-row"><ShieldCheck size={18}/> Herkes hesap oluşturabilir; klinik ve rol erişimi yalnızca güvenli davetle etkinleşir.</div>
       </section>
       <section className="auth-panel">
         <div className="auth-card">
@@ -147,11 +148,11 @@ export default function LoginClient({ configured, platformSetupAllowed }: { conf
             <ShieldCheck size={17}/>
             <div><b>{platformSetupAllowed ? "Platform yöneticisi kurulumu" : pilotToken ? "Pilot klinik daveti" : "Klinik katılım daveti"}</b><small>{platformSetupAllowed ? "Yalnızca PLATFORM_ADMIN_EMAILS içinde tanımlı e-posta ile devam edin." : "Giriş veya kayıt tamamlandıktan sonra davet kodunuz otomatik olarak uygulanacak."}</small></div>
           </div>}
-          <div className={`auth-tabs ${(pilotToken || inviteToken || platformSetupAllowed) ? "" : "single-tab"}`}>
+          <div className="auth-tabs">
             <button className={mode === "login" ? "active" : ""} onClick={() => { setMode("login"); setError(""); setMessage(""); }}>{t.signIn}</button>
-            {(pilotToken || inviteToken || platformSetupAllowed) && <button className={mode === "register" ? "active" : ""} onClick={() => { setMode("register"); setError(""); setMessage(""); }}>{t.signUp}</button>}
+            <button className={mode === "register" ? "active" : ""} onClick={() => { setMode("register"); setError(""); setMessage(""); }}>{t.signUp}</button>
           </div>
-          {!pilotToken && !inviteToken && !platformSetupAllowed && <div className="auth-registration-locked"><ShieldCheck size={16}/><span>Yeni hesaplar yalnızca Klinik Sahibi veya NutriClinic AI tarafından gönderilen davet bağlantısıyla oluşturulur.</span></div>}
+          {!pilotToken && !inviteToken && !platformSetupAllowed && <div className="auth-registration-locked public"><ShieldCheck size={16}/><span>Herkes hesap oluşturabilir. Klinik Sahibi, Diyetisyen, Sekreter ve Danışan yetkileri klinik daveti veya pilot onayıyla güvenli biçimde etkinleşir.</span></div>}
 
           {mode === "login" ? (
             <form className="form-stack" onSubmit={(event)=>{event.preventDefault();void signIn();}}>
@@ -167,12 +168,14 @@ export default function LoginClient({ configured, platformSetupAllowed }: { conf
           ) : (
             <form className="form-stack" onSubmit={(event)=>{event.preventDefault();void signUp();}}>
               <label>{t.fullName}<input value={fullName} onChange={(e)=>setFullName(e.target.value)} autoComplete="name"/></label>
+              <label>Hesabı hangi amaçla açıyorsunuz?<select value={accountIntent} onChange={(e)=>setAccountIntent(e.target.value)}><option value="client">Danışan olarak katılacağım</option><option value="dietitian">Diyetisyen olarak bir kliniğe katılacağım</option><option value="secretary">Sekreter olarak bir kliniğe katılacağım</option><option value="clinic_owner">Klinik sahibi / bağımsız diyetisyenim</option></select><small>Bu seçim doğrudan yetki vermez; rolünüz klinik daveti veya pilot onayıyla etkinleşir.</small></label>
               <div className="two-col">
                 <label>{t.email}<input type="email" value={email} onChange={(e)=>setEmail(e.target.value)} autoComplete="email" placeholder="Varsa"/></label>
                 <label>{t.phone}<input value={phone} onChange={(e)=>setPhone(e.target.value)} autoComplete="tel" placeholder="Varsa"/></label>
               </div>
               <label>{t.password}<input type="password" value={password} onChange={(e)=>setPassword(e.target.value)} autoComplete="new-password"/><small>{t.passwordHint}</small></label>
-              <div className="info-box"><CheckCircle2 size={17}/>{t.registrationInfo}</div>
+              <div className="info-box"><CheckCircle2 size={17}/><span>{pilotToken || inviteToken ? "Kayıt tamamlandığında davetiniz otomatik uygulanacak." : "Kayıt sonrası klinik davet kodunuzu girebilir veya klinik sahibiyseniz pilot başvurusu yapabilirsiniz."}</span></div>
+              {accountIntent === "clinic_owner" && !pilotToken && <a className="secondary-button auth-pilot-link" href="/pilot-application">Pilot klinik başvurusu yap</a>}
               <button type="submit" className="primary-button" disabled={loading}>{loading ? "..." : t.signUp}<ArrowRight size={17}/></button>
             </form>
           )}

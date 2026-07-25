@@ -333,3 +333,133 @@ body:has(.app-shell) .global-copyright{padding-left:284px}
 /* v7.1 — visible, clinic-specific pilot links */
 .pilot-link-result{margin-top:16px;border:1px solid #b9dfcc;background:#f0fbf5;border-radius:14px;padding:14px}.pilot-link-result-head{display:flex;align-items:center;gap:10px;color:#155f43}.pilot-link-result-head>svg{flex:none}.pilot-link-result-head b,.pilot-link-result-head small{display:block}.pilot-link-result-head b{font-size:13px}.pilot-link-result-head small{font-size:10px;color:#4f7766;margin-top:3px}.pilot-link-field{display:grid;grid-template-columns:minmax(0,1fr) auto auto;gap:8px;margin-top:12px}.pilot-link-field input{min-width:0;width:100%;border:1px solid #c7ded2;background:#fff;border-radius:10px;padding:10px 11px;color:#1c4433;font-size:11px}.pilot-link-field button,.pilot-link-field a,.platform-invite-actions button,.platform-invite-actions a{border:1px solid var(--line);background:#fff;color:var(--green);border-radius:9px;padding:8px 10px;font-size:10px;font-weight:700;display:inline-flex;align-items:center;justify-content:center;gap:5px;text-decoration:none;white-space:nowrap}.platform-invite-list article.inactive{opacity:.58}.platform-invite-main{min-width:0;flex:1}.platform-pilot-url{display:block;margin:5px 0;color:var(--green);font-size:10px;line-height:1.45;word-break:break-all;text-decoration:none}.platform-pilot-url:hover{text-decoration:underline}.platform-invite-actions{display:flex;gap:6px;align-items:center;flex-wrap:wrap;justify-content:flex-end}.platform-invite-list article>div:last-child.platform-invite-actions{display:flex}
 @media(max-width:720px){.pilot-link-field{grid-template-columns:1fr 1fr}.pilot-link-field input{grid-column:1/-1}.platform-invite-list article{align-items:flex-start;flex-direction:column}.platform-invite-actions{justify-content:flex-start}}
+
+/* v7.3 public registration and pilot application */
+.auth-registration-locked.public {
+  border-color: rgba(21, 128, 92, .22);
+  background: #f1faf6;
+  color: #245547;
+}
+.auth-pilot-link {
+  width: 100%;
+  justify-content: center;
+}
+.marketing-actions .text-button {
+  display: inline-flex;
+  align-items: center;
+  min-height: 44px;
+  padding: 0 8px;
+  color: #145c44;
+  font-weight: 750;
+  text-decoration: none;
+}
+.pilot-application-page {
+  min-height: 100vh;
+  padding: 24px clamp(20px, 5vw, 72px) 64px;
+  background:
+    radial-gradient(circle at 85% 5%, rgba(197, 237, 211, .58), transparent 33%),
+    linear-gradient(180deg, #f8fbf9 0%, #eef6f2 100%);
+}
+.pilot-application-nav {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  max-width: 1240px;
+  margin: 0 auto 56px;
+}
+.pilot-application-shell {
+  display: grid;
+  grid-template-columns: minmax(0, .9fr) minmax(460px, 1.1fr);
+  gap: clamp(32px, 6vw, 88px);
+  align-items: start;
+  max-width: 1240px;
+  margin: 0 auto;
+}
+.pilot-application-copy {
+  position: sticky;
+  top: 32px;
+  padding-top: 28px;
+}
+.pilot-application-copy h1 {
+  margin: 14px 0 18px;
+  max-width: 680px;
+  font-size: clamp(42px, 5vw, 72px);
+  line-height: .98;
+  letter-spacing: -.055em;
+}
+.pilot-application-copy > p {
+  max-width: 640px;
+  color: #5c6f68;
+  font-size: 18px;
+  line-height: 1.65;
+}
+.pilot-application-benefits {
+  display: grid;
+  gap: 12px;
+  margin-top: 32px;
+}
+.pilot-application-benefits article {
+  display: grid;
+  gap: 5px;
+  padding: 18px 20px;
+  border: 1px solid #d7e5de;
+  border-radius: 18px;
+  background: rgba(255,255,255,.68);
+}
+.pilot-application-benefits span { color: #66776f; }
+.pilot-application-card {
+  display: grid;
+  gap: 20px;
+  padding: clamp(24px, 4vw, 42px);
+  border: 1px solid #d6e4dd;
+  border-radius: 28px;
+  background: rgba(255,255,255,.96);
+  box-shadow: 0 24px 70px rgba(27, 79, 59, .12);
+}
+.pilot-application-card h2 { margin: 8px 0 4px; font-size: 30px; }
+.pilot-application-card > div > p { margin: 0; color: #6b7b75; }
+.pilot-application-card label { display: grid; gap: 8px; font-weight: 700; }
+.pilot-application-card input,
+.pilot-application-card select,
+.pilot-application-card textarea {
+  width: 100%;
+  border: 1px solid #d3e0da;
+  border-radius: 13px;
+  background: #fff;
+  padding: 13px 14px;
+  color: #15211d;
+  font: inherit;
+}
+.pilot-application-card textarea { resize: vertical; min-height: 112px; }
+.pilot-checkbox { grid-template-columns: auto 1fr !important; align-items: center; font-weight: 600 !important; }
+.pilot-checkbox input { width: 18px; height: 18px; padding: 0; }
+.pilot-honeypot { position: absolute !important; left: -9999px; opacity: 0; pointer-events: none; }
+.pilot-success-card { min-height: 420px; align-content: center; justify-items: center; text-align: center; }
+.pilot-success-card svg { color: #16835e; }
+.pilot-success-card p { max-width: 500px; color: #61726b; line-height: 1.6; }
+.platform-row-actions a {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  border: 1px solid #d7e4de;
+  border-radius: 9px;
+  padding: 8px 10px;
+  color: #174f3c;
+  background: #fff;
+  text-decoration: none;
+  font-weight: 700;
+  white-space: nowrap;
+}
+@media (max-width: 900px) {
+  .pilot-application-page { padding-inline: 16px; }
+  .pilot-application-nav { margin-bottom: 24px; }
+  .pilot-application-shell { grid-template-columns: 1fr; }
+  .pilot-application-copy { position: static; padding-top: 0; }
+  .pilot-application-copy h1 { font-size: clamp(38px, 12vw, 58px); }
+}
+.platform-metrics{grid-template-columns:repeat(6,1fr)}
+.status-badge.new{background:#e8f3ff;color:#1f5f91}
+.status-badge.contacted,.status-badge.waitlist{background:#fff3dc;color:#8b5a13}
+.status-badge.approved,.status-badge.closed{background:#e5f7ed;color:#16623f}
+.status-badge.rejected{background:#ffeaea;color:#a23e3e}
+@media(max-width:1300px){.platform-metrics{grid-template-columns:repeat(3,1fr)}}
