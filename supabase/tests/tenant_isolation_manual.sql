@@ -1,0 +1,12 @@
+-- Manual tenant-isolation smoke-test checklist.
+-- Run with separate authenticated test users through Supabase SQL/API tooling,
+-- never with service_role because service_role bypasses RLS.
+
+-- Expected tests:
+-- 1. Clinic A client cannot select Clinic B client_profiles.
+-- 2. Clinic A dietitian cannot select Clinic B meal_plans/measurements/documents.
+-- 3. Secretary cannot select protected clinical fields/RPC outputs.
+-- 4. Orphan profile with no membership cannot select any clinic.
+-- 5. accept_clinic_invite_v7 rejects a user already holding active membership.
+-- 6. role promotion rejects plan limit overflow.
+-- 7. AI request rejects monthly credit overflow.

@@ -1,0 +1,21 @@
+NutriClinic AI v7.0 validation record
+Date: 2026-07-25
+
+Completed:
+- 36 TypeScript/TSX files parsed/transpiled successfully with TypeScript 5.7-compatible compiler options.
+- All local @/ and relative imports resolve to existing project files.
+- package.json, package-lock.json, vercel.json, manifest.webmanifest and tsconfig.json parse as valid JSON.
+- 19 Supabase migration files have balanced PostgreSQL dollar-quote delimiters.
+- Migration 019 contains pilot tenant onboarding, starter tenant seed, plan limits, invites, feedback and AI usage enforcement.
+- Fresh baseline regenerated from migrations 001-019.
+- CSS brace structure balanced.
+- Secret generator executed successfully.
+
+Not completed in this runtime:
+- Full npm install, Next.js production build and ESLint run. The package registry request timed out in this environment.
+
+Required before production/pilot data:
+1. Run npm install, npm run lint and npm run build on the deployment machine or CI.
+2. Run migration 019 on a staging copy first (or the fresh baseline only on an empty Supabase project).
+3. Execute the tenant isolation checklist with separate Clinic A / Clinic B accounts.
+4. Verify e-mail confirmation, storage RLS, push cron and backup restore.
