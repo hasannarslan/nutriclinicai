@@ -463,3 +463,28 @@ body:has(.app-shell) .global-copyright{padding-left:284px}
 .status-badge.approved,.status-badge.closed{background:#e5f7ed;color:#16623f}
 .status-badge.rejected{background:#ffeaea;color:#a23e3e}
 @media(max-width:1300px){.platform-metrics{grid-template-columns:repeat(3,1fr)}}
+
+/* v7.4 grouped sidebar navigation and always-visible sign out */
+.v3-sidebar{overflow:hidden}
+.v3-sidebar nav{display:flex;flex:1;min-height:0;flex-direction:column;gap:5px;overflow-y:auto;overflow-x:hidden;padding:2px 4px 12px 0;scrollbar-width:thin;scrollbar-color:rgba(184,229,108,.28) transparent}
+.v3-sidebar nav::-webkit-scrollbar{width:5px}.v3-sidebar nav::-webkit-scrollbar-track{background:transparent}.v3-sidebar nav::-webkit-scrollbar-thumb{background:rgba(184,229,108,.24);border-radius:999px}
+.v3-sidebar .sidebar-home-link{flex:none;margin-bottom:2px}
+.v3-sidebar .sidebar-nav-group{display:grid;gap:3px}
+.v3-sidebar nav .sidebar-group-trigger{width:100%;min-height:34px;padding:8px 9px;border-radius:9px;color:#789487;background:transparent;gap:7px;text-transform:uppercase;letter-spacing:.85px;font-size:9px;font-weight:900}
+.v3-sidebar nav .sidebar-group-trigger:hover{transform:none;background:rgba(255,255,255,.035);color:#b7c9c0}
+.v3-sidebar nav .sidebar-group-trigger.has-active{color:#cce8a0}
+.v3-sidebar nav .sidebar-group-trigger span{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.v3-sidebar nav .sidebar-group-trigger small{min-width:20px;height:20px;padding:0 6px;border-radius:999px;background:rgba(255,255,255,.07);color:#8fa69b;display:grid;place-items:center;font-size:9px;letter-spacing:0}
+.v3-sidebar nav .sidebar-group-trigger>svg:last-child{margin-left:0;opacity:.65;transition:transform .18s ease}
+.v3-sidebar nav .sidebar-group-trigger.expanded>svg:last-child{transform:rotate(180deg)}
+.v3-sidebar .sidebar-group-items{display:grid;gap:2px;margin:0 0 3px 12px;padding:1px 0 2px 8px;border-left:1px solid rgba(255,255,255,.09)}
+.v3-sidebar nav .sidebar-sub-link{min-height:38px;padding:8px 9px;border-radius:10px;font-size:12px}
+.v3-sidebar nav .sidebar-sub-link>svg:first-child{width:17px;height:17px}
+.v3-sidebar nav .sidebar-sub-link.active{box-shadow:inset 2px 0 0 #b8e56c}
+.v3-sidebar .sidebar-footer{flex:none;border-top:1px solid rgba(255,255,255,.09);padding-top:10px;background:linear-gradient(180deg,rgba(16,39,31,0),#10271f 22%)}
+.v3-sidebar .sidebar-footer .logout-button{width:100%;margin:0;color:#ffd1d1;background:rgba(215,74,74,.08);border:1px solid rgba(255,138,138,.12);justify-content:flex-start}
+.v3-sidebar .sidebar-footer .logout-button:hover{background:rgba(215,74,74,.16);color:#fff;transform:none}
+.topbar-logout-button{min-height:40px;padding:0 12px;border:1px solid #eadede;border-radius:13px;background:#fff;color:#9a3f43;display:inline-flex;align-items:center;justify-content:center;gap:7px;font-size:11px;font-weight:800;box-shadow:0 5px 18px rgba(70,26,26,.035);transition:.18s ease}
+.topbar-logout-button:hover{background:#fff3f3;border-color:#e7bfc1;transform:translateY(-1px)}
+@media(max-width:1120px){.topbar-logout-button{width:40px;padding:0}.topbar-logout-button span{display:none}}
+@media(max-width:820px){.v3-sidebar nav{padding-bottom:14px}.v3-sidebar .sidebar-footer{padding-bottom:max(2px,env(safe-area-inset-bottom))}.topbar-logout-button{display:none}}

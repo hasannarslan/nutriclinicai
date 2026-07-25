@@ -12,6 +12,7 @@ import {
   Gauge,
   MessagesSquare,
   PackageOpen,
+  ChevronDown,
   ChevronRight,
   CircleDollarSign,
   Gift,
@@ -30,7 +31,7 @@ import {
 } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
 import { dictionaries } from "@/lib/i18n";
-import type { Clinic, Membership, Profile, Role } from "@/lib/types";
+import type { Clinic, Locale, Membership, Profile, Role } from "@/lib/types";
 import {
   AppointmentsV3,
   ClientsV3,
@@ -131,6 +132,83 @@ const permissions: Record<Role, View[]> = {
   ],
 };
 
+
+
+type NavItem = {
+  id: View;
+  label: string;
+  icon: React.ReactNode;
+};
+
+type SidebarGroupId =
+  | "scheduling"
+  | "clientManagement"
+  | "nutritionFollowup"
+  | "financeLoyalty"
+  | "communication"
+  | "administration";
+
+const sidebarGroupLabels: Record<Locale, Record<SidebarGroupId, string>> = {
+  tr: {
+    scheduling: "Randevu ve Operasyon",
+    clientManagement: "Danışan Yönetimi",
+    nutritionFollowup: "Beslenme ve Takip",
+    financeLoyalty: "Finans ve Sadakat",
+    communication: "İletişim",
+    administration: "Yönetim",
+  },
+  en: {
+    scheduling: "Scheduling & Operations",
+    clientManagement: "Client Management",
+    nutritionFollowup: "Nutrition & Follow-up",
+    financeLoyalty: "Finance & Loyalty",
+    communication: "Communication",
+    administration: "Administration",
+  },
+  el: {
+    scheduling: "Ραντεβού & Λειτουργίες",
+    clientManagement: "Διαχείριση Πελατών",
+    nutritionFollowup: "Διατροφή & Παρακολούθηση",
+    financeLoyalty: "Οικονομικά & Επιβράβευση",
+    communication: "Επικοινωνία",
+    administration: "Διαχείριση",
+  },
+  ru: {
+    scheduling: "Записи и операции",
+    clientManagement: "Управление клиентами",
+    nutritionFollowup: "Питание и контроль",
+    financeLoyalty: "Финансы и лояльность",
+    communication: "Коммуникация",
+    administration: "Управление",
+  },
+  de: {
+    scheduling: "Termine & Betrieb",
+    clientManagement: "Klientenverwaltung",
+    nutritionFollowup: "Ernährung & Betreuung",
+    financeLoyalty: "Finanzen & Treue",
+    communication: "Kommunikation",
+    administration: "Verwaltung",
+  },
+};
+
+const viewGroup: Partial<Record<View, SidebarGroupId>> = {
+  appointments: "scheduling",
+  resources: "scheduling",
+  packages: "scheduling",
+  clients: "clientManagement",
+  forms: "clientManagement",
+  documents: "clientManagement",
+  mealPlans: "nutritionFollowup",
+  measurements: "nutritionFollowup",
+  followup: "nutritionFollowup",
+  payments: "financeLoyalty",
+  loyalty: "financeLoyalty",
+  messages: "communication",
+  community: "communication",
+  team: "administration",
+  settings: "administration",
+};
+
 function initials(name: string) {
   return name
     .split(" ")
@@ -161,6 +239,7 @@ export default function DashboardClient({
   const [view, setView] = useState<View>("dashboard");
   const [menuOpen, setMenuOpen] = useState(false);
   const [notice, setNotice] = useState("");
+  const [expandedGroups, setExpandedGroups] = useState<Partial<Record<SidebarGroupId, boolean>>>({});
   const [motivation, setMotivation] = useState<string | null>(null);
   const locale = profile.preferred_locale || clinicInfo.default_locale;
   const t = dictionaries[locale];
@@ -180,6 +259,12 @@ export default function DashboardClient({
     const requested = searchParams.get("view") as View | null;
     if (requested && permissions[membership.role].includes(requested)) setView(requested);
   }, [membership.role, searchParams]);
+
+  useEffect(() => {
+    const groupId = viewGroup[view];
+    if (!groupId) return;
+    setExpandedGroups((current) => ({ ...current, [groupId]: true }));
+  }, [view]);
 
   useEffect(() => {
     const navigate = (event: Event) => {
@@ -226,11 +311,7 @@ export default function DashboardClient({
     router.refresh();
   }
 
-  const navItems: Array<{
-    id: View;
-    label: string;
-    icon: React.ReactNode;
-  }> = [
+  const navItems: NavItem[] = [
     { id: "dashboard", label: t.dashboard, icon: <LayoutDashboard size={19} /> },
     { id: "appointments", label: t.appointments, icon: <CalendarDays size={19} /> },
     { id: "clients", label: t.clients, icon: <UsersRound size={19} /> },
@@ -248,6 +329,24 @@ export default function DashboardClient({
     { id: "team", label: t.team, icon: <UserCog size={19} /> },
     { id: "settings", label: t.settings, icon: <Settings size={19} /> },
   ];
+
+  const navItemById = new Map(navItems.map((item) => [item.id, item]));
+  const groupLabels = sidebarGroupLabels[locale];
+  const navGroups: Array<{ id: SidebarGroupId; label: string; itemIds: View[] }> = [
+    { id: "scheduling", label: groupLabels.scheduling, itemIds: ["appointments", "resources", "packages"] },
+    { id: "clientManagement", label: groupLabels.clientManagement, itemIds: ["clients", "forms", "documents"] },
+    { id: "nutritionFollowup", label: groupLabels.nutritionFollowup, itemIds: ["mealPlans", "measurements", "followup"] },
+    { id: "financeLoyalty", label: groupLabels.financeLoyalty, itemIds: ["payments", "loyalty"] },
+    { id: "communication", label: groupLabels.communication, itemIds: ["messages", "community"] },
+    { id: "administration", label: groupLabels.administration, itemIds: ["team", "settings"] },
+  ];
+
+  function openView(nextView: View) {
+    setView(nextView);
+    const groupId = viewGroup[nextView];
+    if (groupId) setExpandedGroups((current) => ({ ...current, [groupId]: true }));
+    setMenuOpen(false);
+  }
 
   return (
     <main className="app-shell v3-shell">
@@ -294,30 +393,69 @@ export default function DashboardClient({
           </span>
         </div>
 
-        <nav>
-          {navItems
-            .filter((item) => permissions[membership.role].includes(item.id))
-            .map((item) => (
-              <button
-                type="button"
-                key={item.id}
-                className={view === item.id ? "active" : ""}
-                onClick={() => {
-                  setView(item.id);
-                  setMenuOpen(false);
-                }}
-              >
-                {item.icon}
-                <span>{item.label}</span>
-                <ChevronRight size={15} />
-              </button>
-            ))}
+        <nav aria-label="Ana menü">
+          {permissions[membership.role].includes("dashboard") && (
+            <button
+              type="button"
+              className={`sidebar-link sidebar-home-link ${view === "dashboard" ? "active" : ""}`}
+              onClick={() => openView("dashboard")}
+            >
+              <LayoutDashboard size={19} />
+              <span>{t.dashboard}</span>
+              <ChevronRight size={15} />
+            </button>
+          )}
+
+          {navGroups.map((group) => {
+            const items = group.itemIds
+              .filter((itemId) => permissions[membership.role].includes(itemId))
+              .map((itemId) => navItemById.get(itemId))
+              .filter((item): item is NavItem => Boolean(item));
+            if (!items.length) return null;
+
+            const isExpanded = Boolean(expandedGroups[group.id]);
+            const hasActiveItem = items.some((item) => item.id === view);
+
+            return (
+              <section className="sidebar-nav-group" key={group.id}>
+                <button
+                  type="button"
+                  className={`sidebar-group-trigger ${isExpanded ? "expanded" : ""} ${hasActiveItem ? "has-active" : ""}`}
+                  onClick={() => setExpandedGroups((current) => ({ ...current, [group.id]: !current[group.id] }))}
+                  aria-expanded={isExpanded}
+                >
+                  <span>{group.label}</span>
+                  <small>{items.length}</small>
+                  <ChevronDown size={15} />
+                </button>
+
+                {isExpanded && (
+                  <div className="sidebar-group-items">
+                    {items.map((item) => (
+                      <button
+                        type="button"
+                        key={item.id}
+                        className={`sidebar-link sidebar-sub-link ${view === item.id ? "active" : ""}`}
+                        onClick={() => openView(item.id)}
+                      >
+                        {item.icon}
+                        <span>{item.label}</span>
+                        <ChevronRight size={14} />
+                      </button>
+                    ))}
+                  </div>
+                )}
+              </section>
+            );
+          })}
         </nav>
 
-        <button type="button" className="logout-button" onClick={logout}>
-          <LogOut size={18} />
-          {t.signOut}
-        </button>
+        <div className="sidebar-footer">
+          <button type="button" className="logout-button" onClick={logout}>
+            <LogOut size={18} />
+            <span>{t.signOut}</span>
+          </button>
+        </div>
       </aside>
 
       <section className="app-main">
@@ -340,16 +478,20 @@ export default function DashboardClient({
               role={membership.role}
               locale={locale}
               onNavigate={(nextView) => {
-                if (permissions[membership.role].includes(nextView)) setView(nextView);
-                else setView("dashboard");
+                if (permissions[membership.role].includes(nextView)) openView(nextView);
+                else openView("dashboard");
               }}
             />
-            <button type="button" className="profile-chip v3-profile-chip" onClick={() => setView("settings")} aria-label="Profil ve ayarları aç">
+            <button type="button" className="profile-chip v3-profile-chip" onClick={() => openView("settings")} aria-label="Profil ve ayarları aç">
               <span>{initials(profile.full_name)}</span>
               <div>
                 <b>{profile.full_name}</b>
                 <small>{profile.email || profile.phone || "Hesap"}</small>
               </div>
+            </button>
+            <button type="button" className="topbar-logout-button" onClick={logout} aria-label={t.signOut} title={t.signOut}>
+              <LogOut size={17} />
+              <span>{t.signOut}</span>
             </button>
           </div>
         </header>

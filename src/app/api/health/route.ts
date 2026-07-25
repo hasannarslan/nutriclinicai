@@ -14,7 +14,7 @@ export function GET() {
   return NextResponse.json({
     status: ready ? "ok" : "degraded",
     app: "NutriClinic AI",
-    version: "0.7.3",
+    version: "0.7.4",
     edition: "Pilot SaaS",
     checks,
     timestamp: new Date().toISOString(),
