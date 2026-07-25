@@ -28,7 +28,7 @@
     "@types/web-push": "^3.6.4"
   },
   "engines": {
-    "node": ">=20.9.0"
+    "node": "20.x"
   },
   "overrides": {
     "postcss": "^8.5.10"
