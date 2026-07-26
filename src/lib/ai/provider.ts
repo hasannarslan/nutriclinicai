@@ -61,10 +61,11 @@ export async function generateAIText({ content, vision = false, maxOutputTokens 
     throw new Error(`${config.label} bağlantısı için ${keyName} ortam değişkeni eklenmelidir.`);
   }
 
+  const safeTokenLimit = Math.min(6000, Math.max(128, Number(maxOutputTokens) || 1800));
   const requestBody: Record<string, unknown> = {
     model: config.model,
     input: [{ role: "user", content }],
-    max_output_tokens: maxOutputTokens,
+    max_output_tokens: safeTokenLimit,
   };
 
   // xAI image understanding documentation recommends disabling server-side storage.
@@ -80,9 +81,16 @@ export async function generateAIText({ content, vision = false, maxOutputTokens 
     signal: AbortSignal.timeout(90_000),
   });
 
-  const payload = (await response.json()) as AIResponsePayload;
+  const rawPayload = await response.text();
+  let payload: AIResponsePayload = {};
+  try {
+    payload = rawPayload ? JSON.parse(rawPayload) as AIResponsePayload : {};
+  } catch {
+    if (!response.ok) throw new Error(`${config.label} servisi geçersiz yanıt döndürdü (${response.status}).`);
+    throw new Error(`${config.label} yanıtı çözümlenemedi.`);
+  }
   if (!response.ok) {
-    throw new Error(payload.error?.message || `${config.label} servisi yanıt vermedi.`);
+    throw new Error(payload.error?.message || `${config.label} servisi yanıt vermedi (${response.status}).`);
   }
 
   const text = (payload.output || [])

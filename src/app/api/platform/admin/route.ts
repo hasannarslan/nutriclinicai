@@ -86,13 +86,16 @@ export async function POST(request: Request) {
   const user = await authorize();
   if (!user) return NextResponse.json({ error: "Yetkisiz erişim" }, { status: 403 });
   try {
-    const body = await request.json() as Record<string, unknown>;
-    const action = String(body.action || "");
+    const contentLength = Number(request.headers.get("content-length") || 0);
+    if (contentLength > 64_000) return NextResponse.json({ error: "İstek verisi çok büyük" }, { status: 413 });
+    const body = await request.json().catch(() => null) as Record<string, unknown> | null;
+    if (!body) return NextResponse.json({ error: "Geçersiz istek verisi" }, { status: 400 });
+    const action = String(body.action || "").trim().slice(0, 80);
     const admin = createAdminClient();
 
     if (action === "create_pilot_invite") {
-      const label = String(body.label || "").trim();
-      const contactEmail = String(body.contact_email || "").trim().toLowerCase() || null;
+      const label = String(body.label || "").trim().slice(0, 180);
+      const contactEmail = String(body.contact_email || "").trim().toLowerCase().slice(0, 180) || null;
       const pilotDays = Math.min(365, Math.max(7, Number(body.pilot_days) || 90));
       const expiresDays = Math.min(90, Math.max(1, Number(body.expires_days) || 14));
       const maxUses = Math.min(20, Math.max(1, Number(body.max_uses) || 1));
@@ -115,8 +118,11 @@ export async function POST(request: Request) {
     if (action === "extend_pilot") {
       const clinicId = String(body.clinic_id || "");
       const days = Math.min(365, Math.max(1, Number(body.days) || 30));
-      const { data: current, error: readError } = await admin.from("clinic_subscriptions").select("pilot_ends_at").eq("clinic_id", clinicId).single();
+      const { data: current, error: readError } = await admin.from("clinic_subscriptions").select("pilot_ends_at,plan_slug,status").eq("clinic_id", clinicId).single();
       if (readError) throw readError;
+      if (current.plan_slug !== "pilot") {
+        return NextResponse.json({ error: "Yalnızca pilot planındaki kliniklerin süresi uzatılabilir." }, { status: 400 });
+      }
       const base = current.pilot_ends_at && new Date(current.pilot_ends_at) > new Date() ? new Date(current.pilot_ends_at) : new Date();
       base.setUTCDate(base.getUTCDate() + days);
       const { error } = await admin.from("clinic_subscriptions").update({ pilot_ends_at: base.toISOString(), status: "pilot", updated_at: new Date().toISOString() }).eq("clinic_id", clinicId);
@@ -132,19 +138,20 @@ export async function POST(request: Request) {
       const planSlug = String(body.plan_slug || "");
       const billingCycle = String(body.billing_cycle || "monthly");
       const agreedPrice = body.agreed_price_try === "" || body.agreed_price_try === null || body.agreed_price_try === undefined ? null : Number(body.agreed_price_try);
-      const approvalNote = String(body.approval_note || "").trim() || null;
+      const approvalNote = String(body.approval_note || "").trim().slice(0, 5000) || null;
       if (!clinicId) return NextResponse.json({ error: "Klinik kimliği zorunludur" }, { status: 400 });
       if (!planSlug || ["pilot", "founder"].includes(planSlug)) return NextResponse.json({ error: "Ücretli plan seçmelisiniz" }, { status: 400 });
       if (!["monthly", "annual", "manual"].includes(billingCycle)) return NextResponse.json({ error: "Faturalama dönemi geçersiz" }, { status: 400 });
       if (agreedPrice !== null && (!Number.isFinite(agreedPrice) || agreedPrice < 0)) return NextResponse.json({ error: "Anlaşılan fiyat geçersiz" }, { status: 400 });
-      const { data: plan, error: planError } = await admin.from("subscription_plans").select("slug,monthly_price_try").eq("slug", planSlug).eq("is_active", true).single();
+      const { data: plan, error: planError } = await admin.from("subscription_plans").select("slug,monthly_price_try").eq("slug", planSlug).eq("is_active", true).eq("is_public", true).single();
       if (planError) throw planError;
       const now = new Date();
       const periodEnd = new Date(now);
       if (billingCycle === "annual") periodEnd.setUTCFullYear(periodEnd.getUTCFullYear() + 1);
       else if (billingCycle === "monthly") periodEnd.setUTCMonth(periodEnd.getUTCMonth() + 1);
-      const finalPrice = agreedPrice ?? Number(plan.monthly_price_try || 0);
-      const { error } = await admin.from("clinic_subscriptions").update({
+      const monthlyPrice = Number(plan.monthly_price_try || 0);
+      const finalPrice = agreedPrice ?? (billingCycle === "annual" ? monthlyPrice * 12 : monthlyPrice);
+      const { data: updatedSubscription, error } = await admin.from("clinic_subscriptions").update({
         plan_slug: planSlug,
         status: "active",
         current_period_started_at: now.toISOString(),
@@ -155,10 +162,13 @@ export async function POST(request: Request) {
         commercial_approved_by_email: user.email,
         commercial_approval_note: approvalNote,
         converted_from_pilot_at: now.toISOString(),
+        pilot_ends_at: null,
+        last_pilot_reminder_days: null,
         cancel_at_period_end: false,
         updated_at: now.toISOString(),
-      }).eq("clinic_id", clinicId);
+      }).eq("clinic_id", clinicId).select("clinic_id").maybeSingle();
       if (error) throw error;
+      if (!updatedSubscription) return NextResponse.json({ error: "Klinik aboneliği bulunamadı." }, { status: 404 });
       const clinicUpdate = await admin.from("clinics").update({ status: "active", updated_at: now.toISOString() }).eq("id", clinicId);
       if (clinicUpdate.error) throw clinicUpdate.error;
       if (requestId) {
@@ -174,7 +184,7 @@ export async function POST(request: Request) {
     if (action === "reject_conversion_request") {
       const clinicId = String(body.clinic_id || "");
       const requestId = String(body.request_id || "");
-      const adminNote = String(body.admin_note || "").trim() || null;
+      const adminNote = String(body.admin_note || "").trim().slice(0, 5000) || null;
       if (!clinicId || !requestId) return NextResponse.json({ error: "Talep bilgisi eksik" }, { status: 400 });
       const { error } = await admin.from("clinic_conversion_requests").update({ status: "rejected", reviewed_by_email: user.email, reviewed_at: new Date().toISOString(), admin_note: adminNote, updated_at: new Date().toISOString() }).eq("id", requestId).eq("clinic_id", clinicId);
       if (error) throw error;
@@ -184,7 +194,7 @@ export async function POST(request: Request) {
 
     if (action === "save_clinic_note") {
       const clinicId = String(body.clinic_id || "");
-      const note = String(body.note || "").trim();
+      const note = String(body.note || "").trim().slice(0, 5000);
       if (!clinicId || note.length < 2) return NextResponse.json({ error: "Klinik notu en az 2 karakter olmalıdır" }, { status: 400 });
       const { error } = await admin.from("platform_clinic_notes").insert({ clinic_id: clinicId, note, created_by_email: user.email || "Platform Admin" });
       if (error) throw error;
@@ -194,19 +204,49 @@ export async function POST(request: Request) {
     if (action === "set_clinic_status") {
       const clinicId = String(body.clinic_id || "");
       const status = String(body.status || "");
-      if (!["active", "pilot", "paused", "expired", "cancelled"].includes(status)) return NextResponse.json({ error: "Durum geçersiz" }, { status: 400 });
-      const { error } = await admin.from("clinics").update({ status, updated_at: new Date().toISOString() }).eq("id", clinicId);
-      if (error) throw error;
-      const subscriptionStatus = status === "active" ? "active" : status === "pilot" ? "pilot" : status;
-      await admin.from("clinic_subscriptions").update({ status: subscriptionStatus, updated_at: new Date().toISOString() }).eq("clinic_id", clinicId);
+      if (!clinicId) return NextResponse.json({ error: "Klinik kimliği zorunludur" }, { status: 400 });
+      if (!["active", "paused", "expired", "cancelled"].includes(status)) return NextResponse.json({ error: "Durum geçersiz" }, { status: 400 });
+
+      const { data: subscription, error: subscriptionReadError } = await admin
+        .from("clinic_subscriptions")
+        .select("plan_slug,status")
+        .eq("clinic_id", clinicId)
+        .maybeSingle();
+      if (subscriptionReadError) throw subscriptionReadError;
+      if (!subscription) return NextResponse.json({ error: "Klinik aboneliği bulunamadı" }, { status: 404 });
+      if (status === "active" && subscription.plan_slug === "pilot") {
+        return NextResponse.json({ error: "Pilot klinik doğrudan Aktif yapılamaz. Pilot süresini uzatın veya ücretli planı onaylayın." }, { status: 400 });
+      }
+
+      const now = new Date().toISOString();
+      const subscriptionPatch: Record<string, unknown> = { status, updated_at: now };
+      if (status === "active") {
+        subscriptionPatch.pilot_ends_at = null;
+        subscriptionPatch.last_pilot_reminder_days = null;
+      }
+      const [{ error: clinicError }, { error: subscriptionError }] = await Promise.all([
+        admin.from("clinics").update({ status, updated_at: now }).eq("id", clinicId),
+        admin.from("clinic_subscriptions").update(subscriptionPatch).eq("clinic_id", clinicId),
+      ]);
+      if (clinicError) throw clinicError;
+      if (subscriptionError) throw subscriptionError;
+      await admin.from("audit_logs").insert({ clinic_id: clinicId, actor_user_id: user.id, action: "clinic_status_changed_by_platform", target_type: "clinic", target_id: clinicId, metadata: { status, by_email: user.email } });
       return NextResponse.json({ ok: true });
     }
 
     if (action === "change_plan") {
       const clinicId = String(body.clinic_id || "");
       const planSlug = String(body.plan_slug || "");
-      const { error } = await admin.from("clinic_subscriptions").update({ plan_slug: planSlug, updated_at: new Date().toISOString() }).eq("clinic_id", clinicId);
+      if (!clinicId || !planSlug) return NextResponse.json({ error: "Klinik ve plan zorunludur" }, { status: 400 });
+      const { data: plan, error: planError } = await admin.from("subscription_plans").select("slug").eq("slug", planSlug).eq("is_active", true).maybeSingle();
+      if (planError) throw planError;
+      if (!plan) return NextResponse.json({ error: "Plan bulunamadı veya pasif" }, { status: 400 });
+      const patch: Record<string, unknown> = { plan_slug: planSlug, updated_at: new Date().toISOString() };
+      if (planSlug === "pilot") patch.status = "pilot";
+      if (planSlug === "founder") { patch.status = "active"; patch.pilot_ends_at = null; patch.last_pilot_reminder_days = null; }
+      const { error } = await admin.from("clinic_subscriptions").update(patch).eq("clinic_id", clinicId);
       if (error) throw error;
+      await admin.from("audit_logs").insert({ clinic_id: clinicId, actor_user_id: user.id, action: "clinic_plan_changed_by_platform", target_type: "clinic", target_id: clinicId, metadata: { plan_slug: planSlug, by_email: user.email } });
       return NextResponse.json({ ok: true });
     }
 

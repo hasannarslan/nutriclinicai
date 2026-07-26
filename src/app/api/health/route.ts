@@ -14,8 +14,8 @@ export function GET() {
   return NextResponse.json({
     status: ready ? "ok" : "degraded",
     app: "NutriClinic AI",
-    version: "0.7.5",
-    edition: "Pilot SaaS",
+    version: "0.8.0",
+    edition: "Stabilized SaaS",
     checks,
     timestamp: new Date().toISOString(),
   }, { status: ready ? 200 : 503 });

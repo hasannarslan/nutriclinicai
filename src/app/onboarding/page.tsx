@@ -18,6 +18,8 @@ export default async function OnboardingPage({
     .select("id")
     .eq("user_id", user.id)
     .eq("is_active", true)
+    .order("created_at", { ascending: true })
+    .limit(1)
     .maybeSingle();
   if (membership) redirect("/dashboard");
 

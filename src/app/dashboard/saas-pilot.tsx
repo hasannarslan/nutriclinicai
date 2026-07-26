@@ -25,12 +25,35 @@ type SaasContext = {
   subscription_status: string;
   pilot_ends_at: string | null;
   days_remaining: number | null;
+  current_period_ends_at: string | null;
+  billing_cycle: "monthly" | "annual" | "manual" | null;
   conversion_request: ConversionRequest | null;
   limits: { dietitians: number; staff: number; active_clients: number; ai_credits: number; storage_gb: number };
   usage: { dietitians: number; staff: number; active_clients: number; ai_requests: number };
 };
 
 type PublicPlan = { slug: string; name: string; monthly_price_try: number | null; description: string | null };
+
+const subscriptionLabels: Record<string, string> = {
+  pilot: "Ücretsiz pilot",
+  trialing: "Deneme",
+  active: "Aktif",
+  past_due: "Ödeme gecikmiş",
+  paused: "Duraklatıldı",
+  expired: "Süresi doldu",
+  cancelled: "İptal edildi",
+};
+
+function isPilotLifecycle(context: SaasContext) {
+  return context.plan_slug === "pilot" && ["pilot", "trialing", "expired", "paused"].includes(context.subscription_status);
+}
+
+function formatDate(value: string | null) {
+  if (!value) return null;
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return null;
+  return new Intl.DateTimeFormat("tr-TR", { day: "2-digit", month: "long", year: "numeric" }).format(date);
+}
 
 function ConversionRequestForm({ context, onSubmitted, compact = false }: { context: SaasContext; onSubmitted: () => void; compact?: boolean }) {
   const supabase = useMemo(() => createClient(), []);
@@ -89,23 +112,32 @@ export function SaasPilotBanner({ role }: { role: Role }) {
   useEffect(() => { void reload(); }, [reload]);
 
   if (!context || role === "client") return null;
-  const endingSoon = context.days_remaining !== null && context.days_remaining <= 14;
-  const expired = context.subscription_status === "expired" || context.clinic_status === "expired";
+  const pilotLifecycle = isPilotLifecycle(context);
+  const pilotExpiredByDate = pilotLifecycle && Boolean(context.pilot_ends_at && new Date(context.pilot_ends_at).getTime() < Date.now());
+  const expired = context.subscription_status === "expired" || context.clinic_status === "expired" || pilotExpiredByDate;
+  const endingSoon = pilotLifecycle && !expired && context.days_remaining !== null && context.days_remaining <= 14;
   const pending = context.conversion_request?.status === "pending";
-  const canRequest = role === "owner" && ["pilot", "expired", "paused"].includes(context.subscription_status) && !pending;
+  const canRequest = role === "owner" && pilotLifecycle && !pending;
+  const periodEnd = formatDate(context.current_period_ends_at);
+  const statusLabel = subscriptionLabels[context.subscription_status] || "Aktif";
+  const description = pending
+    ? `${context.conversion_request?.requested_plan_name || "Ücretli plan"} geçiş talebiniz Platform Admin onayı bekliyor.`
+    : expired && pilotLifecycle
+      ? "Pilot erişim süresi sona erdi. Veriler korunuyor; ücretli devam talebinizi Platform Admin değerlendirebilir."
+      : pilotLifecycle && context.days_remaining !== null
+        ? `Pilot erişimin bitmesine ${context.days_remaining} gün kaldı. Pilot süresince geri bildirimleriniz ürün yol haritasına doğrudan girer.`
+        : context.plan_slug === "founder"
+          ? "Kurucu klinik erişimi süresiz olarak aktiftir."
+          : context.subscription_status === "active" && periodEnd
+            ? `Planınız aktif. Mevcut dönem ${periodEnd} tarihinde sona erer.`
+            : "Klinik planınız aktif.";
 
   return <>
     <section className={`saas-pilot-banner ${endingSoon ? "warning" : ""} ${expired ? "expired" : ""}`}>
       <div className="saas-pilot-icon">{expired ? <AlertTriangle size={22}/> : <FlaskConical size={22}/>}</div>
       <div className="saas-pilot-copy">
-        <b>{context.plan_name} · {context.subscription_status === "pilot" ? "Ücretsiz pilot" : context.subscription_status}</b>
-        <p>{pending
-          ? `${context.conversion_request?.requested_plan_name || "Ücretli plan"} geçiş talebiniz Platform Admin onayı bekliyor.`
-          : expired
-            ? "Pilot erişim süresi sona erdi. Veriler korunuyor; ücretli devam talebinizi Platform Admin değerlendirebilir."
-            : context.days_remaining !== null
-              ? `Pilot erişimin bitmesine ${context.days_remaining} gün kaldı. Pilot süresince geri bildirimleriniz ürün yol haritasına doğrudan girer.`
-              : "Klinik planınız aktif."}</p>
+        <b>{context.plan_name} · {statusLabel}</b>
+        <p>{description}</p>
       </div>
       <div className="saas-usage-chips">
         <span>Diyetisyen <b>{context.usage.dietitians}/{context.limits.dietitians}</b></span>
@@ -139,7 +171,7 @@ export function SaasAccessGate({ isPlatformAdmin = false }: { isPlatformAdmin?: 
   useEffect(() => { void reload(); }, [reload]);
 
   if (!context) return null;
-  const pilotTimeExpired = Boolean(context.pilot_ends_at && new Date(context.pilot_ends_at).getTime() < Date.now());
+  const pilotTimeExpired = isPilotLifecycle(context) && Boolean(context.pilot_ends_at && new Date(context.pilot_ends_at).getTime() < Date.now());
   const blocked = pilotTimeExpired || ["paused", "expired", "cancelled"].includes(context.subscription_status) || ["paused", "expired", "cancelled"].includes(context.clinic_status);
   if (!blocked) return null;
 
@@ -173,6 +205,17 @@ export function PilotFeedback({ role }: { role: Role }) {
   const [message, setMessage] = useState("");
   const [status, setStatus] = useState("");
   const [busy, setBusy] = useState(false);
+  const [eligible, setEligible] = useState(false);
+
+  useEffect(() => {
+    let active = true;
+    void supabase.rpc("get_saas_context_v7").then(({ data }) => {
+      if (!active || !data) return;
+      const context = data as SaasContext;
+      setEligible(isPilotLifecycle(context));
+    });
+    return () => { active = false; };
+  }, [supabase]);
 
   const submit = useCallback(async () => {
     if (message.trim().length < 3) return setStatus("Lütfen geri bildiriminizi biraz daha ayrıntılı yazın.");
@@ -190,7 +233,7 @@ export function PilotFeedback({ role }: { role: Role }) {
     setTimeout(() => { setOpen(false); setStatus(""); }, 1200);
   }, [category, message, rating, supabase]);
 
-  if (role === "client") return null;
+  if (role === "client" || !eligible) return null;
   return <>
     <button type="button" className="pilot-feedback-fab" onClick={() => setOpen(true)}><MessageSquarePlus size={18}/>Pilot geri bildirimi</button>
     {open && <div className="pilot-feedback-overlay" role="dialog" aria-modal="true">

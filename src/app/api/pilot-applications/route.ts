@@ -9,14 +9,18 @@ function text(value: unknown, max = 500) {
 
 export async function POST(request: Request) {
   try {
-    const body = await request.json() as Record<string, unknown>;
+    const contentLength = Number(request.headers.get("content-length") || 0);
+    if (contentLength > 32_768) return NextResponse.json({ error: "Başvuru verisi çok büyük." }, { status: 413 });
+    const body = await request.json().catch(() => null) as Record<string, unknown> | null;
+    if (!body) return NextResponse.json({ error: "Geçersiz başvuru verisi." }, { status: 400 });
     if (text(body.website, 120)) {
       return NextResponse.json({ ok: true });
     }
 
     const fullName = text(body.full_name, 120);
     const email = text(body.email, 180).toLowerCase();
-    const phone = text(body.phone, 40) || null;
+    const phoneValue = text(body.phone, 40).replace(/[^0-9+()\-\s]/g, "");
+    const phone = phoneValue || null;
     const applicantType = text(body.applicant_type, 30) || "clinic_owner";
     const clinicName = text(body.clinic_name, 180) || null;
     const city = text(body.city, 100) || null;

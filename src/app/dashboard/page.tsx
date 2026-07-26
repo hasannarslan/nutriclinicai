@@ -14,7 +14,7 @@ export default async function DashboardPage() {
 
   const [{ data: profile }, { data: membership }] = await Promise.all([
     supabase.from("profiles").select("id,full_name,email,phone,preferred_locale").eq("id", user.id).single(),
-    supabase.from("clinic_memberships").select("id,clinic_id,user_id,role,is_active").eq("user_id", user.id).eq("is_active", true).maybeSingle(),
+    supabase.from("clinic_memberships").select("id,clinic_id,user_id,role,is_active,created_at").eq("user_id", user.id).eq("is_active", true).order("created_at", { ascending: true }).limit(1).maybeSingle(),
   ]);
 
   if (!profile) {

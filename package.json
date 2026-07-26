@@ -1,19 +1,20 @@
 {
   "name": "nutriclinic-ai",
-  "version": "0.7.5",
+  "version": "0.8.0",
   "private": true,
   "scripts": {
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
     "lint": "eslint .",
-    "setup:secrets": "node scripts/generate-secrets.mjs"
+    "setup:secrets": "node scripts/generate-secrets.mjs",
+    "audit": "node scripts/audit-project.mjs"
   },
   "dependencies": {
     "@supabase/ssr": "0.7.0",
     "@supabase/supabase-js": "2.55.0",
     "lucide-react": "0.468.0",
-    "next": "16.0.11",
+    "next": "16.2.12",
     "react": "19.2.4",
     "react-dom": "19.2.4",
     "web-push": "3.6.7"
@@ -23,7 +24,7 @@
     "@types/react": "19.0.0",
     "@types/react-dom": "19.0.0",
     "eslint": "9.0.0",
-    "eslint-config-next": "16.0.11",
+    "eslint-config-next": "16.2.12",
     "typescript": "5.7.3",
     "@types/web-push": "3.6.4"
   },

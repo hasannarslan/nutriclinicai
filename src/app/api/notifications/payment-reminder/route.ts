@@ -7,7 +7,17 @@ export const maxDuration = 60;
 type Channel = "email" | "sms";
 
 function formatMoney(value: number, currency = "TRY") {
-  return new Intl.NumberFormat("tr-TR", { style: "currency", currency }).format(value);
+  try {
+    return new Intl.NumberFormat("tr-TR", { style: "currency", currency }).format(Number.isFinite(value) ? value : 0);
+  } catch {
+    return new Intl.NumberFormat("tr-TR", { style: "currency", currency: "TRY" }).format(Number.isFinite(value) ? value : 0);
+  }
+}
+
+function escapeHtml(value: unknown) {
+  return String(value ?? "").replace(/[&<>"']/g, (character) => ({
+    "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#039;",
+  })[character] || character);
 }
 
 async function sendEmail(to: string, subject: string, text: string, html: string) {
@@ -19,8 +29,8 @@ async function sendEmail(to: string, subject: string, text: string, html: string
     headers: { Authorization: `Bearer ${apiKey}`, "Content-Type": "application/json" },
     body: JSON.stringify({ from, to, subject, text, html }),
   });
-  const payload = await response.json();
-  if (!response.ok) throw new Error(payload?.message || "E-posta gönderilemedi.");
+  const payload = await response.json().catch(() => ({}));
+  if (!response.ok) throw new Error((payload as { message?: string })?.message || `E-posta gönderilemedi (${response.status}).`);
   return String(payload?.id || "");
 }
 
@@ -43,8 +53,8 @@ async function sendSms(to: string, body: string) {
     },
     body: params.toString(),
   });
-  const payload = await response.json();
-  if (!response.ok) throw new Error(payload?.message || "SMS gönderilemedi.");
+  const payload = await response.json().catch(() => ({}));
+  if (!response.ok) throw new Error((payload as { message?: string })?.message || `SMS gönderilemedi (${response.status}).`);
   return String(payload?.sid || "");
 }
 
@@ -56,8 +66,9 @@ export async function POST(request: Request) {
   let paymentId = "";
   let channel: Channel = "email";
   try {
-    const body = await request.json();
-    paymentId = String(body.payment_id || "");
+    const body = await request.json().catch(() => null) as { payment_id?: unknown; channel?: unknown } | null;
+    if (!body) return NextResponse.json({ error: "Geçersiz istek." }, { status: 400 });
+    paymentId = String(body.payment_id || "").trim().slice(0, 80);
     channel = body.channel === "sms" ? "sms" : "email";
     if (!paymentId) return NextResponse.json({ error: "Ödeme kaydı zorunludur." }, { status: 400 });
 
@@ -66,7 +77,9 @@ export async function POST(request: Request) {
       .select("clinic_id,role")
       .eq("user_id", user.id)
       .eq("is_active", true)
-      .single();
+      .order("created_at", { ascending: true })
+      .limit(1)
+      .maybeSingle();
     if (!membership || !["owner", "dietitian", "secretary"].includes(membership.role)) {
       return NextResponse.json({ error: "Hatırlatma gönderme yetkiniz yok." }, { status: 403 });
     }
@@ -96,10 +109,14 @@ export async function POST(request: Request) {
     const today = new Date(); today.setHours(0, 0, 0, 0);
     const days = dueDate ? Math.ceil((dueDate.getTime() - today.getTime()) / 86400000) : null;
     const timing = days == null ? "ödeme tarihi belirlenmemiştir" : days < 0 ? `ödemeniz ${Math.abs(days)} gün gecikmiştir` : days === 0 ? "ödeme tarihiniz bugündür" : `ödeme tarihinize ${days} gün kalmıştır`;
-    const title = `${clinic?.name || "NutriClinic AI"} ödeme hatırlatması`;
+    const clinicName = String(clinic?.name || "NutriClinic AI").slice(0, 180);
+    const clientName = String(client.full_name || "Danışan").slice(0, 180);
+    const serviceType = String(payment.service_type || "Hizmet").slice(0, 180);
+    const title = `${clinicName} ödeme hatırlatması`;
     const reminderAmount = Number(payment.remaining_amount ?? Math.max(0, Number(payment.amount) - Number(payment.paid_amount || 0)));
-    const text = `Merhaba ${client.full_name}, ${payment.service_type} hizmetine ait kalan ${formatMoney(reminderAmount, payment.currency)} tutarındaki ödemeniz için ${timing}. Detaylar için kliniğinizle iletişime geçebilirsiniz.`;
-    const html = `<div style="font-family:Arial,sans-serif;max-width:560px;margin:auto;padding:24px"><h2>${title}</h2><p>Merhaba <strong>${client.full_name}</strong>,</p><p><strong>${payment.service_type}</strong> hizmetine ait <strong>${formatMoney(reminderAmount, payment.currency)}</strong> kalan ödemeniz için ${timing}.</p>${payment.due_date ? `<p>Son ödeme tarihi: <strong>${new Date(payment.due_date).toLocaleDateString("tr-TR")}</strong></p>` : ""}<p>${clinic?.name || "NutriClinic AI"}</p></div>`;
+    const text = `Merhaba ${clientName}, ${serviceType} hizmetine ait kalan ${formatMoney(reminderAmount, payment.currency)} tutarındaki ödemeniz için ${timing}. Detaylar için kliniğinizle iletişime geçebilirsiniz.`;
+    const safeDueDate = payment.due_date ? new Date(payment.due_date).toLocaleDateString("tr-TR") : "";
+    const html = `<div style="font-family:Arial,sans-serif;max-width:560px;margin:auto;padding:24px"><h2>${escapeHtml(title)}</h2><p>Merhaba <strong>${escapeHtml(clientName)}</strong>,</p><p><strong>${escapeHtml(serviceType)}</strong> hizmetine ait <strong>${escapeHtml(formatMoney(reminderAmount, payment.currency))}</strong> kalan ödemeniz için ${escapeHtml(timing)}.</p>${safeDueDate ? `<p>Son ödeme tarihi: <strong>${escapeHtml(safeDueDate)}</strong></p>` : ""}<p>${escapeHtml(clinicName)}</p></div>`;
 
     const recipient = channel === "email" ? client.email : client.phone;
     if (!recipient) return NextResponse.json({ error: channel === "email" ? "Danışanın e-posta adresi yok." : "Danışanın telefon numarası yok." }, { status: 400 });

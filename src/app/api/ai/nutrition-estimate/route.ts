@@ -1,20 +1,33 @@
 import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { generateAIText } from "@/lib/ai/provider";
+import { cleanText, finiteNumber, parseAIJson } from "@/lib/ai/safety";
 
 export const runtime = "nodejs";
 export const maxDuration = 60;
 
-type InputItem = { key: string; food_name: string; quantity_g?: number | null; portion_text?: string | null };
+type InputItem = { key?: unknown; food_name?: unknown; quantity_g?: unknown; portion_text?: unknown };
 
-function parseJson(text: string) {
-  const cleaned = text.replace(/^```json\s*/i, "").replace(/```$/i, "").trim();
-  try { return JSON.parse(cleaned); } catch {
-    const objectStart = cleaned.indexOf("{");
-    const objectEnd = cleaned.lastIndexOf("}");
-    if (objectStart >= 0 && objectEnd > objectStart) return JSON.parse(cleaned.slice(objectStart, objectEnd + 1));
-    throw new Error("AI yanıtı geçerli JSON formatında değildi.");
-  }
+function normalizeResult(value: Record<string, unknown>, allowedKeys: Set<string>) {
+  const rows = Array.isArray(value.items) ? value.items : [];
+  const items = rows
+    .filter((row): row is Record<string, unknown> => Boolean(row && typeof row === "object" && !Array.isArray(row)))
+    .map((row) => ({
+      key: cleanText(row.key, 80),
+      food_name: cleanText(row.food_name, 160),
+      estimated_quantity_g: finiteNumber(row.estimated_quantity_g, { min: 0, max: 100_000, fallback: 0 }),
+      calories: finiteNumber(row.calories, { min: 0, max: 100_000, fallback: 0 }),
+      protein_g: finiteNumber(row.protein_g, { min: 0, max: 10_000, fallback: 0 }),
+      carbs_g: finiteNumber(row.carbs_g, { min: 0, max: 10_000, fallback: 0 }),
+      fat_g: finiteNumber(row.fat_g, { min: 0, max: 10_000, fallback: 0 }),
+      fiber_g: finiteNumber(row.fiber_g, { min: 0, max: 10_000, fallback: 0 }),
+      confidence: ["high", "medium", "low"].includes(String(row.confidence)) ? String(row.confidence) : "low",
+      assumption: cleanText(row.assumption, 500),
+      source_note: cleanText(row.source_note, 300, "Yaklaşık standart besin kompozisyonu"),
+    }))
+    .filter((row) => allowedKeys.has(row.key));
+  if (!items.length) throw new Error("AI, kullanılabilir besin sonucu döndürmedi.");
+  return { items, clinical_note: cleanText(value.clinical_note, 600) };
 }
 
 export async function POST(request: Request) {
@@ -25,24 +38,28 @@ export async function POST(request: Request) {
 
     const { data: membership } = await supabase
       .from("clinic_memberships")
-      .select("clinic_id,role")
+      .select("clinic_id,role,created_at")
       .eq("user_id", user.id)
       .eq("is_active", true)
-      .single();
+      .order("created_at", { ascending: true })
+      .limit(1)
+      .maybeSingle();
     if (!membership || !["owner", "dietitian"].includes(membership.role)) {
       return NextResponse.json({ error: "Bu işlem yalnızca Klinik Sahibi veya Diyetisyen tarafından kullanılabilir." }, { status: 403 });
     }
-    const body = await request.json();
-    const items = (Array.isArray(body.items) ? body.items : [])
-      .map((item: InputItem) => ({
-        key: String(item.key || ""),
-        food_name: String(item.food_name || "").trim(),
-        quantity_g: item.quantity_g == null ? null : Number(item.quantity_g),
-        portion_text: item.portion_text ? String(item.portion_text) : null,
+
+    const body = await request.json().catch(() => null) as { items?: InputItem[] } | null;
+    const items = (Array.isArray(body?.items) ? body.items : [])
+      .map((item, index) => ({
+        key: cleanText(item.key, 80, `item-${index + 1}`),
+        food_name: cleanText(item.food_name, 160),
+        quantity_g: item.quantity_g == null ? null : finiteNumber(item.quantity_g, { min: 0.1, max: 100_000, fallback: 100 }),
+        portion_text: item.portion_text == null ? null : cleanText(item.portion_text, 120),
       }))
-      .filter((item: InputItem) => item.key && item.food_name)
+      .filter((item) => item.key && item.food_name)
       .slice(0, 30);
     if (!items.length) return NextResponse.json({ error: "Hesaplanacak besin bulunamadı." }, { status: 400 });
+
     const { error: creditError } = await supabase.rpc("consume_ai_credit_v7", { p_clinic_id: membership.clinic_id, p_units: 1 });
     if (creditError) return NextResponse.json({ error: creditError.message }, { status: 429 });
 
@@ -67,7 +84,7 @@ JSON şeması:
       content: [{ type: "input_text", text: prompt }],
       maxOutputTokens: 3200,
     });
-    const result = parseJson(text);
+    const result = normalizeResult(parseAIJson(text), new Set(items.map((item) => item.key)));
     return NextResponse.json({ ...result, provider, model });
   } catch (error) {
     return NextResponse.json({ error: error instanceof Error ? error.message : "Besin değerleri hesaplanamadı." }, { status: 500 });
