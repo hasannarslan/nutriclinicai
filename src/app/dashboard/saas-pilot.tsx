@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { AlertTriangle, CheckCircle2, CreditCard, FlaskConical, LogOut, MessageSquarePlus, Send, ShieldAlert, X } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
+import { getRuntimeIntlLocale } from "@/lib/i18n";
 import type { Role } from "@/lib/types";
 
 type ConversionRequest = {
@@ -52,7 +53,7 @@ function formatDate(value: string | null) {
   if (!value) return null;
   const date = new Date(value);
   if (Number.isNaN(date.getTime())) return null;
-  return new Intl.DateTimeFormat("tr-TR", { day: "2-digit", month: "long", year: "numeric" }).format(date);
+  return new Intl.DateTimeFormat(getRuntimeIntlLocale(), { day: "2-digit", month: "long", year: "numeric" }).format(date);
 }
 
 function ConversionRequestForm({ context, onSubmitted, compact = false }: { context: SaasContext; onSubmitted: () => void; compact?: boolean }) {
@@ -87,7 +88,7 @@ function ConversionRequestForm({ context, onSubmitted, compact = false }: { cont
   return <div className={`conversion-request-form ${compact ? "compact" : ""}`}>
     <label>Devam etmek istediğiniz plan
       <select value={planSlug} onChange={(event) => setPlanSlug(event.target.value)}>
-        {plans.map((plan) => <option key={plan.slug} value={plan.slug}>{plan.name}{plan.monthly_price_try !== null ? ` · ${new Intl.NumberFormat("tr-TR", { style: "currency", currency: "TRY", maximumFractionDigits: 0 }).format(plan.monthly_price_try)}/ay` : ""}</option>)}
+        {plans.map((plan) => <option key={plan.slug} value={plan.slug}>{plan.name}{plan.monthly_price_try !== null ? ` · ${new Intl.NumberFormat(getRuntimeIntlLocale(), { style: "currency", currency: "TRY", maximumFractionDigits: 0 }).format(plan.monthly_price_try)}/ay` : ""}</option>)}
       </select>
     </label>
     <label>Platform yöneticisine not

@@ -1,0 +1,56 @@
+NutriClinic AI v8.1 — Teknik Doğrulama Kaydı
+Tarih: 2026-07-26
+
+1) Statik proje denetimi
+Komut: NODE_PATH=$(npm root -g) node scripts/audit-project.mjs
+Sonuç: 0 hata, 0 uyarı
+
+Geçen kontroller:
+- Next.js ve eslint-config-next sürümü: 16.2.12 / 16.2.12
+- TypeScript/TSX sözdizimi: 43 dosya
+- Kaynak RPC → SQL fonksiyon eşleşmesi: 57 benzersiz RPC
+- Fresh baseline: migration 001–023 içeriyor
+- Yerel import çözümlemesi: geçti
+- App Router statik iç bağlantıları: 24
+- RLS etkinleştirme taraması: 57 public tablo
+- Environment variable belgelendirmesi: 24 referans
+- API boolean ayrıştırma kontrolü: geçti
+- İstemci geçersiz/boş JSON koruması: geçti
+- TR/EN/EL/RU/DE runtime locale entegrasyonu: geçti
+- Platform Admin transactional RPC ve yetki sıkılaştırması: geçti
+- Platform Admin kritik CSS sınıfları: geçti
+- Service worker v8.1 cache anahtarı: geçti
+- Supabase select alanı → migration şeması: 676 alan
+- Dashboard kalıcı dil seçimi: geçti
+- Locale bazlı ödeme hatırlatması ve same-origin kontrolü: geçti
+- Platform Admin plan/fiyat/pilot/çift işlem doğrulamaları: geçti
+- Health sürümü ↔ package.json: 0.8.1
+
+2) TypeScript dependency-stub typecheck
+Komut: tsc -p /tmp/nutri-typecheck/tsconfig.json --pretty false
+Sonuç: geçti
+Not: Bu kontrol uygulama kaynaklarını TypeScript ile taradı; gerçek npm dependency kurulumu yerine deklarasyon stubları kullanıldı.
+
+3) Supabase şema kontrolü
+Sonuç: 57 tablo, 0 sorun
+
+4) RPC parametre statik kontrolü
+Sonuç: 89 SQL fonksiyonu, 0 sorun
+
+5) JSON geçerlilik kontrolü
+- package.json: geçerli
+- public/manifest.webmanifest: geçerli
+- tsconfig.json: geçerli
+- vercel.json: geçerli
+
+6) Whitespace/diff kontrolü
+Sonuç: sorun bulunmadı
+
+7) Paket bütünlüğü
+ZIP oluşturulduktan sonra unzip -t ile doğrulanmıştır.
+
+Doğrulama sınırı
+Bu çalışma ortamında production Supabase bağlantısı, gerçek rol hesapları ve npm registry erişimi bulunmadığı için gerçek canlı E2E testi, npm install, ESLint ve Next.js production build burada çalıştırılmadı. Vercel Preview build ve gerçek rol hesaplarıyla smoke test, production'a promote edilmeden önce zorunlu son kapıdır.
+ZIP integrity:
+    testing: nutriclinic-ai-v8.1-repair/.env.example   OK
+No errors detected in compressed data of /mnt/data/nutriclinic-ai-v8.1-repair.zip.

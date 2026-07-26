@@ -9,6 +9,7 @@ import {
   Sparkles, Target, UtensilsCrossed, WandSparkles, Weight, X, WalletCards, CreditCard, CheckCircle2, ShieldCheck,
 } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
+import { getRuntimeIntlLocale } from "@/lib/i18n";
 
 const goals = [
   ["lose_weight", "Kilo vermek", "⚖️"],
@@ -135,7 +136,7 @@ type ClientPayment = {
 };
 
 function money(value: number) {
-  return new Intl.NumberFormat("tr-TR", { style: "currency", currency: "TRY" }).format(Number(value || 0));
+  return new Intl.NumberFormat(getRuntimeIntlLocale(), { style: "currency", currency: "TRY" }).format(Number(value || 0));
 }
 function paymentStatusText(status: ClientPayment["status"] | null) {
   return ({ pending: "Ödeme bekliyor", partial: "Kısmi ödeme", paid: "Ödeme alındı", refunded: "İade edildi", cancelled: "İptal edildi" } as Record<string, string>)[status || ""] || "Ödeme kaydı yok";
@@ -300,7 +301,7 @@ function OnboardingWizard({ initial, onCompleted }: { initial: Onboarding; onCom
       <div className="v4-choice-list compact">{[["good", "Evet, temel ilişkiyi biliyorum"], ["some", "Kısmen biliyorum"], ["new", "Bu konuda desteğe ihtiyacım var"]].map(([value, label]) => <button key={value} className={form.calorie_knowledge === value ? "selected" : ""} onClick={() => setForm({ ...form, calorie_knowledge: value })}><b>{label}</b><i>{form.calorie_knowledge === value && <Check size={18} />}</i></button>)}</div>
     </ChoiceStep>,
     <ChoiceStep key="health" title="Beslenme ve sağlık tercihleri" description="Alerji ve sağlık bildirimleri menü yazılırken diyetisyene otomatik uyarı verir.">
-      <div className="v4-health-step"><h3>Kronik durumlar</h3><div className="v4-chip-grid">{conditions.map((value) => <button key={value} className={form.chronic_conditions.includes(value) ? "selected" : ""} onClick={() => setForm({ ...form, chronic_conditions: toggle(form.chronic_conditions, value) })}>{value}</button>)}</div><h3>Beslenme tarzı</h3><div className="v4-chip-grid">{dietStyles.map((value) => <button key={value} className={form.diet_style === value ? "selected" : ""} onClick={() => setForm({ ...form, diet_style: value })}>{value}</button>)}</div><h3>Alerjiler</h3><div className="v4-chip-grid">{allergens.map((value) => <button key={value} className={form.allergies.includes(value) ? "selected danger" : ""} onClick={() => setForm({ ...form, allergies: toggle(form.allergies, value) })}>{value}</button>)}</div><h3>Katkı maddesi reaksiyonları</h3><div className="v4-chip-grid">{reactions.map((value) => <button key={value} className={form.additive_reactions.includes(value) ? "selected" : ""} onClick={() => setForm({ ...form, additive_reactions: toggle(form.additive_reactions, value) })}>{value}</button>)}</div><label className="v4-water-goal"><Droplets />Günlük su hedefi<input type="number" min="500" max="8000" step="250" value={form.water_goal_ml} onChange={(e) => setForm({ ...form, water_goal_ml: Number(e.target.value) })} /><b>ml</b></label><div className="v4-estimate"><Sparkles /><div><b>Tahmini hedef tarihi</b><p>{weeks ? estimatedDate.toLocaleDateString("tr-TR", { day: "numeric", month: "long", year: "numeric" }) : "Hedef seçildiğinde hesaplanır"}</p><small>Bu yalnızca matematiksel bir tahmindir; gerçek ilerleme kişiden kişiye değişir.</small></div></div></div>
+      <div className="v4-health-step"><h3>Kronik durumlar</h3><div className="v4-chip-grid">{conditions.map((value) => <button key={value} className={form.chronic_conditions.includes(value) ? "selected" : ""} onClick={() => setForm({ ...form, chronic_conditions: toggle(form.chronic_conditions, value) })}>{value}</button>)}</div><h3>Beslenme tarzı</h3><div className="v4-chip-grid">{dietStyles.map((value) => <button key={value} className={form.diet_style === value ? "selected" : ""} onClick={() => setForm({ ...form, diet_style: value })}>{value}</button>)}</div><h3>Alerjiler</h3><div className="v4-chip-grid">{allergens.map((value) => <button key={value} className={form.allergies.includes(value) ? "selected danger" : ""} onClick={() => setForm({ ...form, allergies: toggle(form.allergies, value) })}>{value}</button>)}</div><h3>Katkı maddesi reaksiyonları</h3><div className="v4-chip-grid">{reactions.map((value) => <button key={value} className={form.additive_reactions.includes(value) ? "selected" : ""} onClick={() => setForm({ ...form, additive_reactions: toggle(form.additive_reactions, value) })}>{value}</button>)}</div><label className="v4-water-goal"><Droplets />Günlük su hedefi<input type="number" min="500" max="8000" step="250" value={form.water_goal_ml} onChange={(e) => setForm({ ...form, water_goal_ml: Number(e.target.value) })} /><b>ml</b></label><div className="v4-estimate"><Sparkles /><div><b>Tahmini hedef tarihi</b><p>{weeks ? estimatedDate.toLocaleDateString(getRuntimeIntlLocale(), { day: "numeric", month: "long", year: "numeric" }) : "Hedef seçildiğinde hesaplanır"}</p><small>Bu yalnızca matematiksel bir tahmindir; gerçek ilerleme kişiden kişiye değişir.</small></div></div></div>
     </ChoiceStep>,
   ];
 
@@ -403,19 +404,19 @@ function ClientDailyHub({ onboarding, clinicId }: { onboarding: Onboarding; clin
   return <div className="v4-daily-shell">
     <div className="v4-daily-hero v5-client-hero"><div><span className="section-kicker">NUTRICLINIC GÜNLÜK BAKIM</span><h1>Bugünkü klinik planın</h1><p>{hub.plan ? `${hub.plan.title} • ${goalLabel(onboarding.primary_goal)}` : "Diyetisyeniniz planınızı yayınladığında beslenme, su, aktivite ve ilerleme takibiniz burada birleşir."}</p><div className="v5-care-chips"><span><HeartPulse size={15}/>Diyetisyen kontrollü</span><span><ShieldCheck size={15}/>Alerji profiline bağlı</span><span><Target size={15}/>Hedefe özel</span></div></div><div className="v4-hero-avatar"><Apple /></div></div>
     {message && <div className="notice-bar"><AlertTriangle size={17} />{message}<button onClick={() => setMessage("")}><X size={15} /></button></div>}
-    <div className="v4-week-strip">{dates.map((item) => <button key={dateKey(item)} className={date === dateKey(item) ? "selected" : ""} onClick={() => setDate(dateKey(item))}><span>{item.toLocaleDateString("tr-TR", { weekday: "short" })}</span><b>{item.getDate()}</b></button>)}</div>
+    <div className="v4-week-strip">{dates.map((item) => <button key={dateKey(item)} className={date === dateKey(item) ? "selected" : ""} onClick={() => setDate(dateKey(item))}><span>{item.toLocaleDateString(getRuntimeIntlLocale(), { weekday: "short" })}</span><b>{item.getDate()}</b></button>)}</div>
 
     <section className={`v4-payment-overview ${outstandingTotal > 0 ? "attention" : paidTotal > 0 ? "paid" : "empty"}`}>
       <div className="v4-payment-icon">{outstandingTotal > 0 ? <Clock3 /> : paidTotal > 0 ? <CheckCircle2 /> : <WalletCards />}</div>
       <div className="v4-payment-copy">
         <span className="section-kicker">ÖDEME DURUMU</span>
         <h2>{latestPayment ? paymentStatusText(latestPayment.status) : "Henüz ödeme kaydı yok"}</h2>
-        <p>{nextDuePayment ? `${nextDuePayment.service_type} • Kalan ${money(Number(nextDuePayment.remaining_amount ?? Math.max(0,Number(nextDuePayment.amount)-Number(nextDuePayment.paid_amount||0))))} • ${dueDays == null ? "Tarih belirlenmedi" : dueDays < 0 ? `${Math.abs(dueDays)} gün gecikti` : dueDays === 0 ? "Son ödeme bugün" : `${dueDays} gün kaldı`}` : latestPayment ? `${latestPayment.service_type} • ${paymentMethodText(latestPayment.method)} • ${new Date(latestPayment.paid_at || latestPayment.created_at).toLocaleDateString("tr-TR")}` : "Klinik tarafından ödeme kaydı oluşturulduğunda burada görünecek."}</p>
+        <p>{nextDuePayment ? `${nextDuePayment.service_type} • Kalan ${money(Number(nextDuePayment.remaining_amount ?? Math.max(0,Number(nextDuePayment.amount)-Number(nextDuePayment.paid_amount||0))))} • ${dueDays == null ? "Tarih belirlenmedi" : dueDays < 0 ? `${Math.abs(dueDays)} gün gecikti` : dueDays === 0 ? "Son ödeme bugün" : `${dueDays} gün kaldı`}` : latestPayment ? `${latestPayment.service_type} • ${paymentMethodText(latestPayment.method)} • ${new Date(latestPayment.paid_at || latestPayment.created_at).toLocaleDateString(getRuntimeIntlLocale())}` : "Klinik tarafından ödeme kaydı oluşturulduğunda burada görünecek."}</p>
       </div>
       <div className="v4-payment-metrics">
         <span><small>Alınan</small><b>{money(paidTotal)}</b></span>
         <span><small>Bekleyen</small><b>{money(outstandingTotal)}</b></span>
-        {nextDuePayment?.due_date && <span className={dueDays != null && dueDays < 0 ? "overdue" : ""}><small>Son ödeme</small><b>{new Date(nextDuePayment.due_date).toLocaleDateString("tr-TR")}</b></span>}
+        {nextDuePayment?.due_date && <span className={dueDays != null && dueDays < 0 ? "overdue" : ""}><small>Son ödeme</small><b>{new Date(nextDuePayment.due_date).toLocaleDateString(getRuntimeIntlLocale())}</b></span>}
       </div>
       <button type="button" onClick={() => window.dispatchEvent(new CustomEvent("nutriclinic:navigate", { detail: "settings" }))}><CreditCard />Ödeme geçmişi</button>
     </section>
@@ -456,10 +457,17 @@ function AIRecipePanel({ hub, onClose }: { hub: DailyHub; onClose: () => void })
   async function generate() {
     if (!form.ingredients.trim()) return setMessage("En az bir malzeme yazın.");
     setLoading(true); setMessage(""); setResult(null);
-    const response = await fetch("/api/ai/recipe", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ ...form, max_minutes: Number(form.max_minutes), max_calories: Number(form.max_calories), allergies: hub.client.allergies, disliked_foods: hub.client.disliked_foods, diet_style: hub.client.diet_style, macro_targets: hub.plan }) });
-    const json = await response.json();
-    if (!response.ok) setMessage(json.error || "Tarif oluşturulamadı."); else setResult(json.recipe as RecipeResult);
-    setLoading(false);
+    try {
+      const response = await fetch("/api/ai/recipe", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ ...form, max_minutes: Number(form.max_minutes), max_calories: Number(form.max_calories), allergies: hub.client.allergies, disliked_foods: hub.client.disliked_foods, diet_style: hub.client.diet_style, macro_targets: hub.plan }) });
+      const json = await response.json().catch(() => null) as { error?: string; recipe?: RecipeResult } | null;
+      if (!response.ok) throw new Error(json?.error || "Tarif oluşturulamadı.");
+      if (!json?.recipe) throw new Error("AI servisi geçersiz yanıt döndürdü.");
+      setResult(json.recipe);
+    } catch (error) {
+      setMessage(error instanceof Error ? error.message : "Tarif oluşturulamadı.");
+    } finally {
+      setLoading(false);
+    }
   }
   return <div className="v4-tool-overlay"><section className="v4-tool-panel"><header><button onClick={onClose}><ChevronLeft /></button><div><span className="section-kicker">NUTRICLINIC AI</span><h2>AI tarifi</h2></div><Sparkles /></header>{!result ? <><div className="v4-tool-illustration"><WandSparkles /><h3>Tarifini kişiselleştir</h3><p>Buzdolabında ne var? Malzemeleri girin; alerji ve plan hedefleri otomatik dikkate alınsın.</p></div><textarea rows={5} value={form.ingredients} onChange={(e) => setForm({ ...form, ingredients: e.target.value })} placeholder="Ör: tavuk, mantar, yoğurt, pirinç…" /><div className="v4-tool-settings"><select value={form.meal_type} onChange={(e) => setForm({ ...form, meal_type: e.target.value })}>{["Kahvaltı", "Ara Öğün", "Öğle Yemeği", "Akşam Yemeği"].map((value) => <option key={value}>{value}</option>)}</select><select value={form.max_minutes} onChange={(e) => setForm({ ...form, max_minutes: e.target.value })}>{[15, 30, 45, 60].map((value) => <option key={value} value={value}>{value} dk</option>)}</select><select value={form.max_calories} onChange={(e) => setForm({ ...form, max_calories: e.target.value })}>{[200, 300, 450, 600, 800].map((value) => <option key={value} value={value}>≤ {value} kcal</option>)}</select></div>{message && <div className="notice-bar"><AlertTriangle size={16} />{message}</div>}<button className="v4-primary" onClick={generate} disabled={loading}>{loading ? <LoaderCircle className="spin" /> : <Sparkles />}AI tarif oluştur</button></> : <RecipeCard result={result} onAgain={() => setResult(null)} />}</section></div>;
 }
@@ -482,10 +490,17 @@ function FoodScannerPanel({ hub, onClose }: { hub: DailyHub; onClose: () => void
   async function scan() {
     if (!file || !preview) return setMessage("Ürün etiketi veya içerik listesinin fotoğrafını seçin.");
     setLoading(true); setMessage("");
-    const response = await fetch("/api/ai/food-scan", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ image_data_url: preview, filename: file.name, allergies: hub.client.allergies, disliked_foods: hub.client.disliked_foods, diet_style: hub.client.diet_style }) });
-    const json = await response.json();
-    if (!response.ok) setMessage(json.error || "Analiz yapılamadı."); else setResult(json.scan as ScanResult);
-    setLoading(false);
+    try {
+      const response = await fetch("/api/ai/food-scan", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ image_data_url: preview, filename: file.name, allergies: hub.client.allergies, disliked_foods: hub.client.disliked_foods, diet_style: hub.client.diet_style }) });
+      const json = await response.json().catch(() => null) as { error?: string; scan?: ScanResult } | null;
+      if (!response.ok) throw new Error(json?.error || "Analiz yapılamadı.");
+      if (!json?.scan) throw new Error("AI servisi geçersiz yanıt döndürdü.");
+      setResult(json.scan);
+    } catch (error) {
+      setMessage(error instanceof Error ? error.message : "Analiz yapılamadı.");
+    } finally {
+      setLoading(false);
+    }
   }
   return <div className="v4-tool-overlay"><section className="v4-tool-panel"><header><button onClick={onClose}><ChevronLeft /></button><div><span className="section-kicker">GIDA GÜVENLİĞİ</span><h2>Yiyecek tarayıcı</h2></div><ScanLine /></header><div className="v4-scan-upload">{preview ? <img src={preview} alt="Yüklenen ürün etiketi" /> : <Camera />}<label><ImagePlus />Fotoğraf seç<input type="file" accept="image/*" onChange={(e) => choose(e.target.files?.[0] || null)} /></label></div><p className="v4-tool-help">İçindekiler ve alerjen uyarısı net görünecek şekilde fotoğraf çekin. Sonuç kesin tıbbi güvence değildir; ambalaj etiketini ve diyetisyeninizi esas alın.</p>{message && <div className="notice-bar"><AlertTriangle size={16} />{message}</div>}{result && <div className={`v4-scan-result ${result.suitability}`}><div className="v4-scan-summary"><ShieldIcon status={result.suitability} /><div><b>{result.product_name || "Ürün analizi"}</b><p>{result.summary}</p></div></div><h3>Alerjen uyarıları</h3>{result.allergen_alerts.length ? result.allergen_alerts.map((item) => <article key={`${item.allergen}-${item.reason}`}><span className={`severity ${item.severity}`}>{item.severity}</span><div><b>{item.allergen}</b><p>{item.reason}</p></div></article>) : <p>Profilinizle eşleşen belirgin alerjen saptanmadı.</p>}<h3>Katkı maddeleri</h3>{result.additive_findings.length ? result.additive_findings.map((item) => <article key={item.code_or_name}><span>🧪</span><div><b>{item.code_or_name}</b><p>{item.note}</p></div></article>) : <p>Okunabilen etikette belirgin katkı maddesi saptanmadı.</p>}{result.recommended_actions?.length?<><h3>Önerilen adımlar</h3>{result.recommended_actions.map(action=><article key={action}><span>✓</span><div><p>{action}</p></div></article>)}</>:null}<small>{result.uncertainty_note}</small></div>}<button className="v4-primary" onClick={scan} disabled={loading}>{loading ? <LoaderCircle className="spin" /> : <ScanLine />}{result ? "Yeniden tara" : "Etiketi analiz et"}</button></section></div>;
 }

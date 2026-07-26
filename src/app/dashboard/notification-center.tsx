@@ -15,6 +15,7 @@ import {
   X,
 } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
+import { intlLocales, normalizeLocale } from "@/lib/i18n";
 import type { Role } from "@/lib/types";
 
 type View =
@@ -62,7 +63,8 @@ function relativeTime(value: string, locale: string) {
   const date = new Date(value);
   const seconds = Math.round((date.getTime() - Date.now()) / 1000);
   const abs = Math.abs(seconds);
-  const formatter = new Intl.RelativeTimeFormat(locale || "tr-TR", { numeric: "auto" });
+  const intlLocale = intlLocales[normalizeLocale(locale)];
+  const formatter = new Intl.RelativeTimeFormat(intlLocale, { numeric: "auto" });
   if (abs < 60) return formatter.format(seconds, "second");
   const minutes = Math.round(seconds / 60);
   if (Math.abs(minutes) < 60) return formatter.format(minutes, "minute");
@@ -70,7 +72,7 @@ function relativeTime(value: string, locale: string) {
   if (Math.abs(hours) < 24) return formatter.format(hours, "hour");
   const days = Math.round(hours / 24);
   if (Math.abs(days) < 30) return formatter.format(days, "day");
-  return date.toLocaleDateString(locale || "tr-TR", { day: "2-digit", month: "short", year: "numeric" });
+  return date.toLocaleDateString(intlLocale, { day: "2-digit", month: "short", year: "numeric" });
 }
 
 function defaultAction(category: string, role: Role): View {

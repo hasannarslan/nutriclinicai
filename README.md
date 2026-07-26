@@ -1,44 +1,46 @@
-# NutriClinic AI v8.0 — Stabilized SaaS Edition
+# NutriClinic AI v8.1 — Localization & Platform Repair
 
-NutriClinic AI; diyetisyen, sekreter, danışan ve Platform Admin rollerini aynı çok-klinikli SaaS yapısında birleştiren klinik işletim sistemidir.
+NutriClinic AI; Klinik Sahibi, Diyetisyen, Sekreter, Danışan ve Platform Admin rollerini çok kiracılı bir SaaS yapısında birleştiren klinik yönetim uygulamasıdır.
 
-## v8.0 ile düzeltilen kritik alanlar
+## v8.1 düzeltme kapsamı
 
-- Kurucu veya ücretli kliniklerde yanlış görünen pilot geri sayımı kaldırıldı.
-- Abonelik yaşam döngüsü veritabanı trigger’ı ile tutarlı hale getirildi.
-- Platform Admin’de pilot uzatma, ücretli onay ve durum değiştirme işlemleri güvenli kurallara bağlandı.
-- Klinik detay ekranı yalnızca pilot kliniklerde ticari onay ve pilot uzatma alanlarını gösteriyor.
-- Klinik durumları kullanıcıya Türkçe etiketlerle gösteriliyor.
-- PWA service worker artık klinik, dashboard, admin ve API yanıtlarını önbelleğe almıyor; eski ekran gösterme riski azaltıldı.
-- AI tarif, besin tahmini ve etiket tarama endpoint’lerine giriş sınırları, tenant filtresi ve yanıt doğrulama eklendi.
-- E-posta HTML içeriği kaçışlanarak enjeksiyon riski azaltıldı.
-- Push abonelik endpoint’i HTTPS, anahtar ve uzunluk doğrulaması yapıyor.
-- Bir kullanıcının birden fazla aktif üyeliği bulunduğunda sayfaların `.single()` hatası vermesi engellendi.
-- Next.js ve `eslint-config-next` aynı güvenli sürüme yükseltildi.
-- Fresh kurulum için `production_baseline_v8.sql` oluşturuldu.
-- `npm run audit` komutu ile kaynak, RPC, migration, baseline ve gizli anahtar kontrolleri eklendi.
+- Dashboard ve Platform Admin için TR, EN, EL, RU ve DE çalışma zamanı yerelleştirmesi güçlendirildi.
+- Dashboard üst çubuğuna anında çalışan dil seçici eklendi; seçim `profiles.preferred_locale` alanına kaydediliyor.
+- Login, onboarding ve pilot başvuru ekranları aynı locale çalışma zamanına bağlandı.
+- Para ve tarih biçimleri seçilen dile göre `Intl` ile gösteriliyor.
+- Ödeme hatırlatma e-posta/SMS metinleri danışanın tercih ettiği dilde hazırlanıyor.
+- Platform Admin klinik listesi, detay çekmecesi, geçiş talepleri ve hata/yükleme durumları yeniden düzenlendi.
+- Pilot uzatma, klinik durumu değiştirme, plan değiştirme ve ücretli onay işlemleri veritabanında transaction kullanan service-role RPC'lerine taşındı.
+- Pilot kliniklerin yanlışlıkla doğrudan aktif yapılması engellendi; aktif ücretli/founder kliniklerde pilot tarihleri temizleniyor.
+- Klinik ve abonelik durumlarının birbirinden kopmasını engelleyen senkronizasyon trigger'ı eklendi.
+- Platform Admin işlemlerinde UUID, gün, fiyat, plan, durum, metin uzunluğu ve aynı anda çift tıklama doğrulamaları eklendi.
+- Klinik detay API'si kısmi tablo hatalarında tüm paneli düşürmek yerine uyarı döndürüyor ve sayıları exact count ile hesaplıyor.
+- İstemci `fetch` işlemleri boş veya geçersiz JSON yanıtına karşı korundu.
+- Profil ve klinik ayarlarında sayı, e-posta, locale ve metin sınırları eklendi.
+- PWA cache anahtarı v8.1 olarak yenilendi; dashboard/admin/API yanıtları cache dışı tutuluyor.
+- Statik denetime import, rota, RPC, RLS, environment variable ve Supabase select/şema eşleştirmesi eklendi.
 
-## Mevcut v7.5 veritabanını güncelleme
+## Mevcut v8.0 veritabanını güncelleme
 
-Supabase SQL Editor içinde yalnızca şunu çalıştırın:
+Önce Supabase yedeği alın. Supabase SQL Editor içinde yalnızca şu dosyayı çalıştırın:
 
 ```text
-supabase/migrations/022_stabilization_and_lifecycle_fix.sql
+supabase/migrations/023_platform_integrity_and_locale_v81.sql
 ```
 
-`001–021` migrationlarını yeniden çalıştırmayın.
+`001–022` migrationlarını yeniden çalıştırmayın.
 
 ## Sıfırdan Supabase kurulumu
 
 Yeni bir Supabase projesinde tek dosya kullanın:
 
 ```text
-supabase/baseline/production_baseline_v8.sql
+supabase/baseline/production_baseline_v8_1.sql
 ```
 
 ## Ortam değişkenleri
 
-`.env.example` dosyasını `.env.local` olarak kopyalayın. Production için en az:
+`.env.example` dosyasını `.env.local` olarak kopyalayın. Production için temel değişkenler:
 
 ```env
 NEXT_PUBLIC_SUPABASE_URL=
@@ -51,33 +53,27 @@ AI_PROVIDER=xai
 XAI_API_KEY=
 ```
 
-Push, e-posta ve SMS kullanılıyorsa VAPID, Resend ve Twilio değişkenlerini de `.env.example` içinden ekleyin. Gizli anahtarlara `NEXT_PUBLIC_` öneki eklemeyin.
+Push, e-posta ve SMS kullanılacaksa VAPID, Resend ve Twilio değişkenlerini de `.env.example` içinden ekleyin. Gizli anahtarlara `NEXT_PUBLIC_` öneki eklemeyin.
 
 ## Kurulum ve doğrulama
 
 ```bash
 npm install
 npm run audit
+npm run typecheck
 npm run lint
 npm run build
 npm run dev
 ```
 
-## Platform Admin kurulumu
+## Platform Admin doğrulama akışı
 
-1. `PLATFORM_ADMIN_EMAILS` içine yönetici e-postasını yazın.
-2. Geçici bir `PLATFORM_SETUP_TOKEN` oluşturun.
-3. Deploy sonrasında `/login?platform_setup=TOKEN` adresinden yetkili e-postayla giriş yapın.
-4. `/platform-admin` erişimini doğrulayın.
-5. İlk kurulumdan sonra `PLATFORM_SETUP_TOKEN` değerini kaldırıp yeniden deploy edin.
-
-## Pilot → ücretli geçiş
-
-- Pilot klinik, panelden ücretli devam talebi oluşturur.
-- Platform Admin klinik detayını, operasyon ve finans özetini inceler.
-- Plan, faturalama dönemi, fiyat ve sözleşme notu girilerek onay verilir.
-- Onayda klinik ve abonelik `active` olur; pilot tarihi temizlenir.
-- Founder ve aktif ücretli kliniklerde pilot uzatma/onay ekranı gösterilmez.
+1. `/platform-admin` sayfasını açın.
+2. Dil seçicisinde TR/EN/EL/RU/DE arasında geçiş yapın ve sayfayı yenileyerek seçimin korunduğunu kontrol edin.
+3. Bir kliniğin `Detayları gör` düğmesini açın.
+4. Pilot klinikte süre uzatma ve ücretli plan onayını test edin.
+5. Ücretli/founder klinikte pilot geri sayımının görünmediğini doğrulayın.
+6. Geçiş talebi onaylandığında abonelik durumunun `active`, pilot tarihlerinin `null` olduğunu doğrulayın.
 
 ## Sağlık kontrolü
 
@@ -88,7 +84,7 @@ npm run dev
 Beklenen sürüm:
 
 ```json
-{"version":"0.8.0","edition":"Stabilized SaaS"}
+{"version":"0.8.1","edition":"Stabilized SaaS v8.1"}
 ```
 
-Detaylı denetim sonucu için `AUDIT-v8.md` dosyasına bakın.
+Teknik kapsam ve doğrulama sınırları için `AUDIT-v8.1.md` dosyasına bakın.

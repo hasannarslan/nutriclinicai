@@ -1,7 +1,10 @@
 "use client";
 
-import { useState, type FormEvent } from "react";
-import { ArrowRight, CheckCircle2 } from "lucide-react";
+import { useEffect, useState, type FormEvent } from "react";
+import { ArrowRight, CheckCircle2, Languages } from "lucide-react";
+import { detectBrowserLocale, localeLabels, locales } from "@/lib/i18n";
+import { LocalizedContent } from "@/lib/i18n-runtime";
+import type { Locale } from "@/lib/types";
 
 const initialForm = {
   full_name: "",
@@ -18,6 +21,8 @@ const initialForm = {
 };
 
 export default function PilotApplicationForm() {
+  const [locale, setLocale] = useState<Locale>("tr");
+  useEffect(() => setLocale(detectBrowserLocale()), []);
   const [form, setForm] = useState(initialForm);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
@@ -32,8 +37,9 @@ export default function PilotApplicationForm() {
         headers: { "content-type": "application/json" },
         body: JSON.stringify(form),
       });
-      const payload = await response.json();
-      if (!response.ok) throw new Error(payload.error || "Başvuru gönderilemedi.");
+      const payload = await response.json().catch(() => null) as { error?: string } | null;
+      if (!response.ok) throw new Error(payload?.error || "Başvuru gönderilemedi.");
+      if (!payload) throw new Error("Sunucu boş veya geçersiz yanıt döndürdü.");
       setSuccess(true);
       setForm(initialForm);
     } catch (err) {
@@ -44,11 +50,13 @@ export default function PilotApplicationForm() {
   }
 
   if (success) {
-    return <section className="pilot-application-card pilot-success-card"><CheckCircle2 size={42}/><h2>Başvurunuz alındı</h2><p>Başvurunuzu inceleyip uygun bulunması hâlinde size özel pilot bağlantısını e-posta yoluyla göndereceğiz.</p><button className="secondary-button" onClick={() => setSuccess(false)}>Yeni başvuru gönder</button></section>;
+    return <LocalizedContent locale={locale} className="localized-app-root"><section className="pilot-application-card pilot-success-card"><label className="language-picker pilot-language-picker"><Languages size={16}/><select value={locale} onChange={(event) => setLocale(event.target.value as Locale)}>{locales.map((item) => <option key={item} value={item}>{localeLabels[item]}</option>)}</select></label><CheckCircle2 size={42}/><h2>Başvurunuz alındı</h2><p>Başvurunuzu inceleyip uygun bulunması hâlinde size özel pilot bağlantısını e-posta yoluyla göndereceğiz.</p><button className="secondary-button" onClick={() => setSuccess(false)}>Yeni başvuru gönder</button></section></LocalizedContent>;
   }
 
   return (
+    <LocalizedContent locale={locale} className="localized-app-root">
     <form className="pilot-application-card" onSubmit={submit}>
+      <label className="language-picker pilot-language-picker"><Languages size={16}/><select value={locale} onChange={(event) => setLocale(event.target.value as Locale)}>{locales.map((item) => <option key={item} value={item}>{localeLabels[item]}</option>)}</select></label>
       <div><span className="section-kicker">BAŞVURU FORMU</span><h2>Pilot erişim talebi</h2><p>Bilgiler yalnızca pilot değerlendirmesi ve iletişim amacıyla kullanılır.</p></div>
       <div className="form-grid">
         <label>Ad soyad<input required value={form.full_name} onChange={(e)=>setForm({...form,full_name:e.target.value})}/></label>
@@ -66,5 +74,6 @@ export default function PilotApplicationForm() {
       {error && <p className="form-message error">{error}</p>}
       <button className="primary-button" disabled={loading}>{loading ? "Gönderiliyor…" : "Pilot başvurusu gönder"}<ArrowRight size={17}/></button>
     </form>
+    </LocalizedContent>
   );
 }

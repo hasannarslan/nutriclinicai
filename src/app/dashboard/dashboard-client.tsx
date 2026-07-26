@@ -17,6 +17,7 @@ import {
   CircleDollarSign,
   Gift,
   LayoutDashboard,
+  Languages,
   LogOut,
   Menu,
   MessageCircle,
@@ -30,7 +31,8 @@ import {
   X,
 } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
-import { dictionaries } from "@/lib/i18n";
+import { dictionaries, localeLabels, locales, normalizeLocale } from "@/lib/i18n";
+import { LocalizedContent } from "@/lib/i18n-runtime";
 import type { Clinic, Locale, Membership, Profile, Role } from "@/lib/types";
 import {
   AppointmentsV3,
@@ -239,9 +241,10 @@ export default function DashboardClient({
   const [view, setView] = useState<View>("dashboard");
   const [menuOpen, setMenuOpen] = useState(false);
   const [notice, setNotice] = useState("");
+  const [localeSaving, setLocaleSaving] = useState(false);
   const [expandedGroups, setExpandedGroups] = useState<Partial<Record<SidebarGroupId, boolean>>>({});
   const [motivation, setMotivation] = useState<string | null>(null);
-  const locale = profile.preferred_locale || clinicInfo.default_locale;
+  const locale = normalizeLocale(profile.preferred_locale || clinicInfo.default_locale);
   const t = dictionaries[locale];
 
   useEffect(() => {
@@ -282,6 +285,23 @@ export default function DashboardClient({
     await supabase.auth.signOut();
     router.replace("/login");
     router.refresh();
+  }
+
+  async function changeLocale(nextLocale: Locale) {
+    if (nextLocale === locale || localeSaving) return;
+    const previousLocale = locale;
+    setLocaleSaving(true);
+    setNotice("");
+    setProfile((current) => ({ ...current, preferred_locale: nextLocale }));
+    const { error } = await supabase
+      .from("profiles")
+      .update({ preferred_locale: nextLocale })
+      .eq("id", profile.id);
+    if (error) {
+      setProfile((current) => ({ ...current, preferred_locale: previousLocale }));
+      setNotice(error.message || "Panel dili kaydedilemedi.");
+    }
+    setLocaleSaving(false);
   }
 
   async function claimFirstOwner() {
@@ -349,6 +369,7 @@ export default function DashboardClient({
   }
 
   return (
+    <LocalizedContent locale={locale} className="localized-app-root">
     <main className="app-shell v3-shell">
       <PwaRegister />
       {motivation && (
@@ -472,6 +493,17 @@ export default function DashboardClient({
             </p>
           </div>
           <div className="topbar-account-actions">
+            <label className="language-picker dashboard-language-picker" title="Panel dili">
+              <Languages size={16}/>
+              <select
+                value={locale}
+                disabled={localeSaving}
+                onChange={(event) => void changeLocale(event.target.value as Locale)}
+                aria-label="Panel dili"
+              >
+                {locales.map((item) => <option key={item} value={item}>{localeLabels[item]}</option>)}
+              </select>
+            </label>
             {isPlatformAdmin && <a className="platform-admin-link" href="/platform-admin"><Shield size={16}/><span>Platform Admin</span></a>}
             <NotificationCenter
               userId={profile.id}
@@ -576,5 +608,6 @@ export default function DashboardClient({
         <SaasAccessGate isPlatformAdmin={isPlatformAdmin} />
       </section>
     </main>
+    </LocalizedContent>
   );
 }

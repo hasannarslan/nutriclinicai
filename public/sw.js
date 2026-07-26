@@ -1,4 +1,4 @@
-const CACHE_NAME = "nutriclinic-v8-public-shell";
+const CACHE_NAME = "nutriclinic-v81-public-shell";
 const PUBLIC_ASSETS = ["/offline.html", "/manifest.webmanifest", "/icon.svg"];
 
 self.addEventListener("install", (event) => {

@@ -1,10 +1,11 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { Apple, ArrowRight, CheckCircle2, Languages, ShieldCheck } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
-import { dictionaries, localeLabels, locales } from "@/lib/i18n";
+import { detectBrowserLocale, dictionaries, localeLabels, locales } from "@/lib/i18n";
+import { LocalizedContent } from "@/lib/i18n-runtime";
 import type { Locale } from "@/lib/types";
 
 export default function LoginClient({ configured, platformSetupAllowed }: { configured: boolean; platformSetupAllowed: boolean }) {
@@ -12,6 +13,7 @@ export default function LoginClient({ configured, platformSetupAllowed }: { conf
   const searchParams = useSearchParams();
   const [mode, setMode] = useState<"login" | "register">(searchParams.get("mode") === "register" ? "register" : "login");
   const [locale, setLocale] = useState<Locale>("tr");
+  useEffect(() => setLocale(detectBrowserLocale()), []);
   const [fullName, setFullName] = useState("");
   const [accountIntent, setAccountIntent] = useState("client");
   const [email, setEmail] = useState("");
@@ -115,6 +117,7 @@ export default function LoginClient({ configured, platformSetupAllowed }: { conf
 
   if (!configured) {
     return (
+      <LocalizedContent locale={locale} className="localized-app-root">
       <main className="auth-page single">
         <section className="auth-card setup-card">
           <div className="brand"><span><Apple size={22}/></span><b>NutriClinic AI</b></div>
@@ -124,10 +127,12 @@ export default function LoginClient({ configured, platformSetupAllowed }: { conf
           <p className="hint">Ayrıntılar proje içindeki README.md dosyasında bulunuyor.</p>
         </section>
       </main>
+      </LocalizedContent>
     );
   }
 
   return (
+    <LocalizedContent locale={locale} className="localized-app-root">
     <main className="auth-page">
       <section className="auth-hero">
         <div className="brand light"><span><Apple size={23}/></span><b>NutriClinic AI</b></div>
@@ -184,5 +189,6 @@ export default function LoginClient({ configured, platformSetupAllowed }: { conf
         </div>
       </section>
     </main>
+    </LocalizedContent>
   );
 }

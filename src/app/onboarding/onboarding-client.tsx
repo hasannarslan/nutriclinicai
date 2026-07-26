@@ -1,9 +1,12 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import { Apple, ArrowRight, Building2, CheckCircle2, KeyRound, LogOut, UsersRound } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
+import { detectBrowserLocale, localeLabels, locales } from "@/lib/i18n";
+import { LocalizedContent } from "@/lib/i18n-runtime";
+import type { Locale } from "@/lib/types";
 
 function makeSlug(value: string) {
   return value
@@ -33,7 +36,8 @@ export default function OnboardingClient({
   const [clinicName, setClinicName] = useState("");
   const [slug, setSlug] = useState("");
   const [timezone, setTimezone] = useState("Europe/Istanbul");
-  const [locale, setLocale] = useState("tr");
+  const [locale, setLocale] = useState<Locale>("tr");
+  useEffect(() => setLocale(detectBrowserLocale()), []);
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState("");
   const [error, setError] = useState("");
@@ -78,6 +82,7 @@ export default function OnboardingClient({
   }
 
   return (
+    <LocalizedContent locale={locale} className="localized-app-root">
     <main className="onboarding-page">
       <section className="onboarding-shell">
         <header className="onboarding-header">
@@ -110,7 +115,7 @@ export default function OnboardingClient({
               <div className="form-grid">
                 <label>Klinik adı<input value={clinicName} onChange={(event) => { setClinicName(event.target.value); if (!slug) setSlug(makeSlug(event.target.value)); }} placeholder="Örn. Arslan Sağlıklı Yaşam Merkezi"/></label>
                 <label>Klinik bağlantısı<input value={slug} onChange={(event) => setSlug(makeSlug(event.target.value))} placeholder="arslan-saglikli-yasam"/><small>Panel ve ilerideki özel bağlantınız için kullanılır.</small></label>
-                <label>Varsayılan dil<select value={locale} onChange={(event) => setLocale(event.target.value)}><option value="tr">Türkçe</option><option value="en">English</option><option value="el">Ελληνικά</option><option value="ru">Русский</option><option value="de">Deutsch</option></select></label>
+                <label>Varsayılan dil<select value={locale} onChange={(event) => setLocale(event.target.value as Locale)}>{locales.map((item) => <option key={item} value={item}>{localeLabels[item]}</option>)}</select></label>
                 <label>Saat dilimi<select value={timezone} onChange={(event) => setTimezone(event.target.value)}><option value="Europe/Istanbul">Türkiye / İstanbul</option><option value="Asia/Famagusta">Kıbrıs / Gazimağusa</option><option value="Europe/Athens">Yunanistan / Atina</option><option value="Europe/Berlin">Almanya / Berlin</option><option value="Europe/Moscow">Rusya / Moskova</option></select></label>
               </div>
               <div className="pilot-includes"><CheckCircle2 size={18}/><p>Pilot klinik, bağımsız veritabanı alanı, Klinik Sahibi hesabı, varsayılan Diyetisyen profili ve ücretsiz pilot planıyla otomatik hazırlanır.</p></div>
@@ -130,5 +135,6 @@ export default function OnboardingClient({
         <p className="onboarding-help">Davet kodunuz yoksa kliniğinizin sahibinden davet isteyin. Klinik sahibi veya bağımsız diyetisyenseniz <a href="/pilot-application">pilot programına başvurun</a>.</p>
       </section>
     </main>
+    </LocalizedContent>
   );
 }

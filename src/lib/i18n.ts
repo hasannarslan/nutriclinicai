@@ -10,6 +10,48 @@ export const localeLabels: Record<Locale, string> = {
   de: "Deutsch",
 };
 
+export const intlLocales: Record<Locale, string> = {
+  tr: "tr-TR",
+  en: "en-GB",
+  el: "el-GR",
+  ru: "ru-RU",
+  de: "de-DE",
+};
+
+export function isLocale(value: unknown): value is Locale {
+  return typeof value === "string" && locales.includes(value as Locale);
+}
+
+export function normalizeLocale(value: unknown, fallback: Locale = "tr"): Locale {
+  if (isLocale(value)) return value;
+  if (typeof value === "string") {
+    const short = value.toLowerCase().split(/[-_]/)[0];
+    if (isLocale(short)) return short;
+  }
+  return fallback;
+}
+
+export function detectBrowserLocale(): Locale {
+  if (typeof window === "undefined") return "tr";
+  const stored = window.localStorage.getItem("nutriclinic_locale");
+  if (stored) return normalizeLocale(stored);
+  return normalizeLocale(window.navigator.language);
+}
+
+let runtimeLocale: Locale = "tr";
+
+export function setRuntimeLocale(locale: Locale) {
+  runtimeLocale = normalizeLocale(locale);
+}
+
+export function getRuntimeLocale(): Locale {
+  return runtimeLocale;
+}
+
+export function getRuntimeIntlLocale(): string {
+  return intlLocales[runtimeLocale];
+}
+
 const tr = {
   brandLine: "Akıllı klinik yönetimi",
   signIn: "Giriş yap",
@@ -60,10 +102,485 @@ const tr = {
   setupRequiredText: ".env.local dosyasına Supabase URL ve anahtarını ekleyip SQL migration dosyasını çalıştır.",
 };
 
-export const dictionaries: Record<Locale, typeof tr> = {
+type Dictionary = typeof tr;
+
+export const dictionaries: Record<Locale, Dictionary> = {
   tr,
-  en: { ...tr, brandLine: "Smart clinic management", signIn: "Sign in", signUp: "Create account", fullName: "Full name", email: "Email", phone: "Phone", password: "Password", authIdentity: "Email or phone", registrationInfo: "Every new account is created with the Client role.", dashboard: "Overview", appointments: "Appointments", clients: "Clients", payments: "Payments", mealPlans: "Meal Plans", measurements: "Measurements", loyalty: "Loyalty", community: "Community", packages: "Packages & Sessions", resources: "Devices & Rooms", forms: "Intake & Consent", documents: "Documents", messages: "Private Messages", followup: "Adherence & Follow-up", team: "Team & Roles", settings: "Settings", signOut: "Sign out", owner: "Clinic Owner", dietitian: "Dietitian", secretary: "Secretary", client: "Client", welcome: "Welcome", bookAppointment: "Book appointment", newAppointment: "New appointment", save: "Save", cancel: "Cancel", status: "Status", role: "Role", updateRole: "Update role", noData: "No records yet." },
-  el: { ...tr, brandLine: "Έξυπνη διαχείριση κλινικής", signIn: "Σύνδεση", signUp: "Εγγραφή", fullName: "Ονοματεπώνυμο", email: "Email", phone: "Τηλέφωνο", password: "Κωδικός", authIdentity: "Email ή τηλέφωνο", registrationInfo: "Κάθε νέος λογαριασμός δημιουργείται ως Πελάτης.", dashboard: "Επισκόπηση", appointments: "Ραντεβού", clients: "Πελάτες", payments: "Πληρωμές", mealPlans: "Πλάνα Διατροφής", measurements: "Μετρήσεις", loyalty: "Επιβράβευση", community: "Κοινότητα", packages: "Πακέτα & Συνεδρίες", resources: "Συσκευές & Αίθουσες", forms: "Ιστορικό & Συναινέσεις", documents: "Έγγραφα", messages: "Ιδιωτικά Μηνύματα", followup: "Συμμόρφωση & Παρακολούθηση", team: "Ομάδα & Ρόλοι", settings: "Ρυθμίσεις", signOut: "Αποσύνδεση", owner: "Ιδιοκτήτης Κλινικής", dietitian: "Διαιτολόγος", secretary: "Γραμματέας", client: "Πελάτης", welcome: "Καλώς ήρθατε", bookAppointment: "Κλείστε ραντεβού", newAppointment: "Νέο ραντεβού", save: "Αποθήκευση", cancel: "Ακύρωση", status: "Κατάσταση", role: "Ρόλος", updateRole: "Ενημέρωση ρόλου", noData: "Δεν υπάρχουν εγγραφές." },
-  ru: { ...tr, brandLine: "Умное управление клиникой", signIn: "Войти", signUp: "Регистрация", fullName: "Имя и фамилия", email: "Email", phone: "Телефон", password: "Пароль", authIdentity: "Email или телефон", registrationInfo: "Каждая новая учетная запись создается с ролью Клиент.", dashboard: "Обзор", appointments: "Записи", clients: "Клиенты", payments: "Платежи", mealPlans: "Планы питания", measurements: "Измерения", loyalty: "Лояльность", community: "Сообщество", packages: "Пакеты и сеансы", resources: "Устройства и кабинеты", forms: "Анкета и согласия", documents: "Документы", messages: "Личные сообщения", followup: "Соблюдение и контроль", team: "Команда и роли", settings: "Настройки", signOut: "Выйти", owner: "Владелец клиники", dietitian: "Диетолог", secretary: "Секретарь", client: "Клиент", welcome: "Добро пожаловать", bookAppointment: "Записаться", newAppointment: "Новая запись", save: "Сохранить", cancel: "Отмена", status: "Статус", role: "Роль", updateRole: "Обновить роль", noData: "Записей пока нет." },
-  de: { ...tr, brandLine: "Intelligente Praxisverwaltung", signIn: "Anmelden", signUp: "Registrieren", fullName: "Vor- und Nachname", email: "E-Mail", phone: "Telefon", password: "Passwort", authIdentity: "E-Mail oder Telefon", registrationInfo: "Jedes neue Konto wird mit der Rolle Klient erstellt.", dashboard: "Übersicht", appointments: "Termine", clients: "Klienten", payments: "Zahlungen", mealPlans: "Ernährungspläne", measurements: "Messungen", loyalty: "Treue", community: "Community", packages: "Pakete & Sitzungen", resources: "Geräte & Räume", forms: "Anamnese & Einwilligung", documents: "Dokumente", messages: "Private Nachrichten", followup: "Adhärenz & Betreuung", team: "Team & Rollen", settings: "Einstellungen", signOut: "Abmelden", owner: "Praxisinhaber", dietitian: "Ernährungsberater", secretary: "Sekretariat", client: "Klient", welcome: "Willkommen", bookAppointment: "Termin buchen", newAppointment: "Neuer Termin", save: "Speichern", cancel: "Abbrechen", status: "Status", role: "Rolle", updateRole: "Rolle aktualisieren", noData: "Noch keine Einträge." },
+  en: {
+    brandLine: "Smart clinic management", signIn: "Sign in", signUp: "Create account", fullName: "Full name", email: "Email", phone: "Phone", password: "Password", passwordHint: "At least 8 characters", authIdentity: "Email or phone", accountQuestion: "Don't have an account?", alreadyAccount: "Already have an account?", registrationInfo: "Every new account is securely created with the Client role.", verificationSent: "A verification link/code was sent. You can sign in after verifying your account.", dashboard: "Overview", appointments: "Appointments", clients: "Clients", payments: "Payments", mealPlans: "Meal Plans", measurements: "Measurements", loyalty: "Loyalty", community: "Community", packages: "Packages & Sessions", resources: "Devices & Rooms", forms: "Intake & Consent", documents: "Documents", messages: "Private Messages", followup: "Adherence & Follow-up", team: "Team & Roles", settings: "Settings", signOut: "Sign out", owner: "Clinic Owner", dietitian: "Dietitian", secretary: "Secretary", client: "Client", welcome: "Welcome", bookAppointment: "Book appointment", newAppointment: "New appointment", save: "Save", cancel: "Cancel", status: "Status", role: "Role", updateRole: "Update role", noData: "No records yet.", claimOwner: "Activate the first clinic owner account", claimOwnerHelp: "This button works only when no clinic owner exists. It is disabled after initial setup.", setupRequired: "Supabase connection is missing", setupRequiredText: "Add the Supabase URL and key to .env.local and run the SQL migration file.",
+  },
+  el: {
+    brandLine: "Έξυπνη διαχείριση κλινικής", signIn: "Σύνδεση", signUp: "Δημιουργία λογαριασμού", fullName: "Ονοματεπώνυμο", email: "Email", phone: "Τηλέφωνο", password: "Κωδικός", passwordHint: "Τουλάχιστον 8 χαρακτήρες", authIdentity: "Email ή τηλέφωνο", accountQuestion: "Δεν έχετε λογαριασμό;", alreadyAccount: "Έχετε ήδη λογαριασμό;", registrationInfo: "Κάθε νέος λογαριασμός δημιουργείται με ασφάλεια ως Πελάτης.", verificationSent: "Στάλθηκε σύνδεσμος/κωδικός επιβεβαίωσης. Μπορείτε να συνδεθείτε μετά την επιβεβαίωση.", dashboard: "Επισκόπηση", appointments: "Ραντεβού", clients: "Πελάτες", payments: "Πληρωμές", mealPlans: "Πλάνα Διατροφής", measurements: "Μετρήσεις", loyalty: "Επιβράβευση", community: "Κοινότητα", packages: "Πακέτα & Συνεδρίες", resources: "Συσκευές & Αίθουσες", forms: "Ιστορικό & Συναινέσεις", documents: "Έγγραφα", messages: "Ιδιωτικά Μηνύματα", followup: "Συμμόρφωση & Παρακολούθηση", team: "Ομάδα & Ρόλοι", settings: "Ρυθμίσεις", signOut: "Αποσύνδεση", owner: "Ιδιοκτήτης Κλινικής", dietitian: "Διαιτολόγος", secretary: "Γραμματέας", client: "Πελάτης", welcome: "Καλώς ήρθατε", bookAppointment: "Κλείστε ραντεβού", newAppointment: "Νέο ραντεβού", save: "Αποθήκευση", cancel: "Ακύρωση", status: "Κατάσταση", role: "Ρόλος", updateRole: "Ενημέρωση ρόλου", noData: "Δεν υπάρχουν εγγραφές.", claimOwner: "Ενεργοποίηση πρώτου ιδιοκτήτη κλινικής", claimOwnerHelp: "Αυτό το κουμπί λειτουργεί μόνο όταν δεν υπάρχει ιδιοκτήτης κλινικής και απενεργοποιείται μετά την αρχική ρύθμιση.", setupRequired: "Λείπει η σύνδεση Supabase", setupRequiredText: "Προσθέστε το URL και το κλειδί Supabase στο .env.local και εκτελέστε το SQL migration.",
+  },
+  ru: {
+    brandLine: "Умное управление клиникой", signIn: "Войти", signUp: "Создать аккаунт", fullName: "Имя и фамилия", email: "Email", phone: "Телефон", password: "Пароль", passwordHint: "Не менее 8 символов", authIdentity: "Email или телефон", accountQuestion: "Нет аккаунта?", alreadyAccount: "Уже есть аккаунт?", registrationInfo: "Каждая новая учетная запись безопасно создается с ролью Клиент.", verificationSent: "Ссылка/код подтверждения отправлены. После подтверждения можно войти.", dashboard: "Обзор", appointments: "Записи", clients: "Клиенты", payments: "Платежи", mealPlans: "Планы питания", measurements: "Измерения", loyalty: "Лояльность", community: "Сообщество", packages: "Пакеты и сеансы", resources: "Устройства и кабинеты", forms: "Анкета и согласия", documents: "Документы", messages: "Личные сообщения", followup: "Соблюдение и контроль", team: "Команда и роли", settings: "Настройки", signOut: "Выйти", owner: "Владелец клиники", dietitian: "Диетолог", secretary: "Секретарь", client: "Клиент", welcome: "Добро пожаловать", bookAppointment: "Записаться", newAppointment: "Новая запись", save: "Сохранить", cancel: "Отмена", status: "Статус", role: "Роль", updateRole: "Обновить роль", noData: "Записей пока нет.", claimOwner: "Активировать первого владельца клиники", claimOwnerHelp: "Кнопка работает только если владельца клиники еще нет, и отключается после первичной настройки.", setupRequired: "Нет подключения к Supabase", setupRequiredText: "Добавьте URL и ключ Supabase в .env.local и выполните SQL migration.",
+  },
+  de: {
+    brandLine: "Intelligente Praxisverwaltung", signIn: "Anmelden", signUp: "Konto erstellen", fullName: "Vor- und Nachname", email: "E-Mail", phone: "Telefon", password: "Passwort", passwordHint: "Mindestens 8 Zeichen", authIdentity: "E-Mail oder Telefon", accountQuestion: "Noch kein Konto?", alreadyAccount: "Bereits registriert?", registrationInfo: "Jedes neue Konto wird sicher mit der Rolle Klient angelegt.", verificationSent: "Ein Bestätigungslink/-code wurde gesendet. Nach der Bestätigung können Sie sich anmelden.", dashboard: "Übersicht", appointments: "Termine", clients: "Klienten", payments: "Zahlungen", mealPlans: "Ernährungspläne", measurements: "Messungen", loyalty: "Treue", community: "Community", packages: "Pakete & Sitzungen", resources: "Geräte & Räume", forms: "Anamnese & Einwilligung", documents: "Dokumente", messages: "Private Nachrichten", followup: "Adhärenz & Betreuung", team: "Team & Rollen", settings: "Einstellungen", signOut: "Abmelden", owner: "Praxisinhaber", dietitian: "Ernährungsberater", secretary: "Sekretariat", client: "Klient", welcome: "Willkommen", bookAppointment: "Termin buchen", newAppointment: "Neuer Termin", save: "Speichern", cancel: "Abbrechen", status: "Status", role: "Rolle", updateRole: "Rolle aktualisieren", noData: "Noch keine Einträge.", claimOwner: "Erstes Praxisinhaber-Konto aktivieren", claimOwnerHelp: "Diese Schaltfläche funktioniert nur, wenn noch kein Praxisinhaber vorhanden ist, und wird nach der Ersteinrichtung deaktiviert.", setupRequired: "Supabase-Verbindung fehlt", setupRequiredText: "Fügen Sie Supabase-URL und Schlüssel in .env.local ein und führen Sie die SQL-Migration aus.",
+  },
 };
+
+type PhraseTranslations = Partial<Record<Exclude<Locale, "tr">, string>>;
+
+// Legacy screens used Turkish literals directly. This catalogue lets the compatibility
+// layer localize those screens while they are progressively moved to key-based strings.
+const phraseCatalogue: Record<string, PhraseTranslations> = {
+  "Genel Bakış": { en: "Overview", el: "Επισκόπηση", ru: "Обзор", de: "Übersicht" },
+  "Randevular": { en: "Appointments", el: "Ραντεβού", ru: "Записи", de: "Termine" },
+  "Danışanlar": { en: "Clients", el: "Πελάτες", ru: "Клиенты", de: "Klienten" },
+  "Ödemeler": { en: "Payments", el: "Πληρωμές", ru: "Платежи", de: "Zahlungen" },
+  "Menü Planları": { en: "Meal Plans", el: "Πλάνα Διατροφής", ru: "Планы питания", de: "Ernährungspläne" },
+  "Ölçümler": { en: "Measurements", el: "Μετρήσεις", ru: "Измерения", de: "Messungen" },
+  "Sadakat": { en: "Loyalty", el: "Επιβράβευση", ru: "Лояльность", de: "Treue" },
+  "Topluluk": { en: "Community", el: "Κοινότητα", ru: "Сообщество", de: "Community" },
+  "Paket ve Seanslar": { en: "Packages & Sessions", el: "Πακέτα & Συνεδρίες", ru: "Пакеты и сеансы", de: "Pakete & Sitzungen" },
+  "Cihaz ve Odalar": { en: "Devices & Rooms", el: "Συσκευές & Αίθουσες", ru: "Устройства и кабинеты", de: "Geräte & Räume" },
+  "Anamnez ve Onam": { en: "Intake & Consent", el: "Ιστορικό & Συναινέσεις", ru: "Анкета и согласия", de: "Anamnese & Einwilligung" },
+  "Belgeler": { en: "Documents", el: "Έγγραφα", ru: "Документы", de: "Dokumente" },
+  "Özel Mesajlar": { en: "Private Messages", el: "Ιδιωτικά Μηνύματα", ru: "Личные сообщения", de: "Private Nachrichten" },
+  "Uyum ve Takip": { en: "Adherence & Follow-up", el: "Συμμόρφωση & Παρακολούθηση", ru: "Соблюдение и контроль", de: "Adhärenz & Betreuung" },
+  "Ekip ve Roller": { en: "Team & Roles", el: "Ομάδα & Ρόλοι", ru: "Команда и роли", de: "Team & Rollen" },
+  "Ayarlar": { en: "Settings", el: "Ρυθμίσεις", ru: "Настройки", de: "Einstellungen" },
+  "Kaydet": { en: "Save", el: "Αποθήκευση", ru: "Сохранить", de: "Speichern" },
+  "İptal": { en: "Cancel", el: "Ακύρωση", ru: "Отмена", de: "Abbrechen" },
+  "Sil": { en: "Delete", el: "Διαγραφή", ru: "Удалить", de: "Löschen" },
+  "Düzenle": { en: "Edit", el: "Επεξεργασία", ru: "Изменить", de: "Bearbeiten" },
+  "Ekle": { en: "Add", el: "Προσθήκη", ru: "Добавить", de: "Hinzufügen" },
+  "Yeni": { en: "New", el: "Νέο", ru: "Новый", de: "Neu" },
+  "Yenile": { en: "Refresh", el: "Ανανέωση", ru: "Обновить", de: "Aktualisieren" },
+  "Ara": { en: "Search", el: "Αναζήτηση", ru: "Поиск", de: "Suchen" },
+  "Filtrele": { en: "Filter", el: "Φίλτρο", ru: "Фильтр", de: "Filtern" },
+  "Onayla": { en: "Approve", el: "Έγκριση", ru: "Подтвердить", de: "Bestätigen" },
+  "Reddet": { en: "Reject", el: "Απόρριψη", ru: "Отклонить", de: "Ablehnen" },
+  "Kapat": { en: "Close", el: "Κλείσιμο", ru: "Закрыть", de: "Schließen" },
+  "Aç": { en: "Open", el: "Άνοιγμα", ru: "Открыть", de: "Öffnen" },
+  "Geri": { en: "Back", el: "Πίσω", ru: "Назад", de: "Zurück" },
+  "Devam": { en: "Continue", el: "Συνέχεια", ru: "Продолжить", de: "Weiter" },
+  "Tamam": { en: "Done", el: "Τέλος", ru: "Готово", de: "Fertig" },
+  "Durum": { en: "Status", el: "Κατάσταση", ru: "Статус", de: "Status" },
+  "İşlemler": { en: "Actions", el: "Ενέργειες", ru: "Действия", de: "Aktionen" },
+  "Açıklama": { en: "Description", el: "Περιγραφή", ru: "Описание", de: "Beschreibung" },
+  "Not": { en: "Note", el: "Σημείωση", ru: "Примечание", de: "Notiz" },
+  "Tarih": { en: "Date", el: "Ημερομηνία", ru: "Дата", de: "Datum" },
+  "Saat": { en: "Time", el: "Ώρα", ru: "Время", de: "Uhrzeit" },
+  "Başlangıç": { en: "Starter", el: "Βασικό", ru: "Стартовый", de: "Starter" },
+  "Bitiş": { en: "End", el: "Λήξη", ru: "Конец", de: "Ende" },
+  "Aktif": { en: "Active", el: "Ενεργό", ru: "Активно", de: "Aktiv" },
+  "Pasif": { en: "Inactive", el: "Ανενεργό", ru: "Неактивно", de: "Inaktiv" },
+  "Bekliyor": { en: "Pending", el: "Σε αναμονή", ru: "Ожидает", de: "Ausstehend" },
+  "Onaylandı": { en: "Approved", el: "Εγκρίθηκε", ru: "Подтверждено", de: "Bestätigt" },
+  "Tamamlandı": { en: "Completed", el: "Ολοκληρώθηκε", ru: "Завершено", de: "Abgeschlossen" },
+  "İptal edildi": { en: "Cancelled", el: "Ακυρώθηκε", ru: "Отменено", de: "Storniert" },
+  "Duraklatıldı": { en: "Paused", el: "Σε παύση", ru: "Приостановлено", de: "Pausiert" },
+  "Süresi Doldu": { en: "Expired", el: "Έληξε", ru: "Истекло", de: "Abgelaufen" },
+  "Ödendi": { en: "Paid", el: "Πληρώθηκε", ru: "Оплачено", de: "Bezahlt" },
+  "Kısmi": { en: "Partial", el: "Μερική", ru: "Частично", de: "Teilweise" },
+  "İade": { en: "Refund", el: "Επιστροφή", ru: "Возврат", de: "Erstattung" },
+  "Henüz kayıt yok.": { en: "No records yet.", el: "Δεν υπάρχουν εγγραφές.", ru: "Записей пока нет.", de: "Noch keine Einträge." },
+  "Henüz ödeme kaydı yok.": { en: "No payment records yet.", el: "Δεν υπάρχουν ακόμη πληρωμές.", ru: "Платежей пока нет.", de: "Noch keine Zahlungen." },
+  "Yükleniyor…": { en: "Loading…", el: "Φόρτωση…", ru: "Загрузка…", de: "Wird geladen…" },
+  "İşleniyor…": { en: "Processing…", el: "Επεξεργασία…", ru: "Обработка…", de: "Wird verarbeitet…" },
+  "Gönderiliyor…": { en: "Sending…", el: "Αποστολή…", ru: "Отправка…", de: "Wird gesendet…" },
+  "Veriler alınamadı": { en: "Data could not be loaded", el: "Δεν ήταν δυνατή η φόρτωση των δεδομένων", ru: "Не удалось загрузить данные", de: "Daten konnten nicht geladen werden" },
+  "İşlem başarısız": { en: "Action failed", el: "Η ενέργεια απέτυχε", ru: "Операция не выполнена", de: "Aktion fehlgeschlagen" },
+  "Tekrar dene": { en: "Try again", el: "Δοκιμάστε ξανά", ru: "Повторить", de: "Erneut versuchen" },
+  "Profil ve ayarları aç": { en: "Open profile and settings", el: "Άνοιγμα προφίλ και ρυθμίσεων", ru: "Открыть профиль и настройки", de: "Profil und Einstellungen öffnen" },
+  "Menüyü kapat": { en: "Close menu", el: "Κλείσιμο μενού", ru: "Закрыть меню", de: "Menü schließen" },
+  "Ana menü": { en: "Main menu", el: "Κύριο μενού", ru: "Главное меню", de: "Hauptmenü" },
+  "Bugün": { en: "Today", el: "Σήμερα", ru: "Сегодня", de: "Heute" },
+  "Dün": { en: "Yesterday", el: "Χθες", ru: "Вчера", de: "Gestern" },
+  "Yarın": { en: "Tomorrow", el: "Αύριο", ru: "Завтра", de: "Morgen" },
+  "Klinik Sahibi": { en: "Clinic Owner", el: "Ιδιοκτήτης Κλινικής", ru: "Владелец клиники", de: "Praxisinhaber" },
+  "Diyetisyen": { en: "Dietitian", el: "Διαιτολόγος", ru: "Диетолог", de: "Ernährungsberater" },
+  "Sekreter": { en: "Secretary", el: "Γραμματέας", ru: "Секретарь", de: "Sekretariat" },
+  "Danışan": { en: "Client", el: "Πελάτης", ru: "Клиент", de: "Klient" },
+  "Klinik": { en: "Clinic", el: "Κλινική", ru: "Клиника", de: "Praxis" },
+  "Klinikler": { en: "Clinics", el: "Κλινικές", ru: "Клиники", de: "Praxen" },
+  "Klinik adı": { en: "Clinic name", el: "Όνομα κλινικής", ru: "Название клиники", de: "Praxisname" },
+  "Varsayılan dil": { en: "Default language", el: "Προεπιλεγμένη γλώσσα", ru: "Язык по умолчанию", de: "Standardsprache" },
+  "Panel dili": { en: "Interface language", el: "Γλώσσα περιβάλλοντος", ru: "Язык интерфейса", de: "Oberflächensprache" },
+  "Saat dilimi": { en: "Time zone", el: "Ζώνη ώρας", ru: "Часовой пояс", de: "Zeitzone" },
+  "Adres": { en: "Address", el: "Διεύθυνση", ru: "Адрес", de: "Adresse" },
+  "Web sitesi": { en: "Website", el: "Ιστότοπος", ru: "Сайт", de: "Website" },
+  "Yeni randevu": { en: "New appointment", el: "Νέο ραντεβού", ru: "Новая запись", de: "Neuer Termin" },
+  "Randevu oluştur": { en: "Book appointment", el: "Κλείστε ραντεβού", ru: "Записаться", de: "Termin buchen" },
+  "Yeni danışan": { en: "New client", el: "Νέος πελάτης", ru: "Новый клиент", de: "Neuer Klient" },
+  "Yeni ödeme": { en: "New payment", el: "Νέα πληρωμή", ru: "Новый платеж", de: "Neue Zahlung" },
+  "Ödeme ekle": { en: "Add payment", el: "Προσθήκη πληρωμής", ru: "Добавить платеж", de: "Zahlung hinzufügen" },
+  "Ölçüm ekle": { en: "Add measurement", el: "Προσθήκη μέτρησης", ru: "Добавить измерение", de: "Messung hinzufügen" },
+  "Yeni menü": { en: "New meal plan", el: "Νέο πλάνο", ru: "Новый план", de: "Neuer Ernährungsplan" },
+  "Yeni paket": { en: "New package", el: "Νέο πακέτο", ru: "Новый пакет", de: "Neues Paket" },
+  "Yeni belge yükle": { en: "Upload new document", el: "Μεταφόρτωση νέου εγγράφου", ru: "Загрузить документ", de: "Neues Dokument hochladen" },
+  "Bildirimler": { en: "Notifications", el: "Ειδοποιήσεις", ru: "Уведомления", de: "Benachrichtigungen" },
+  "Bildirim yok": { en: "No notifications", el: "Δεν υπάρχουν ειδοποιήσεις", ru: "Нет уведомлений", de: "Keine Benachrichtigungen" },
+  "Tümünü okundu yap": { en: "Mark all as read", el: "Σήμανση όλων ως αναγνωσμένα", ru: "Отметить все прочитанными", de: "Alle als gelesen markieren" },
+  "Bildirimleri kaydet": { en: "Save notifications", el: "Αποθήκευση ειδοποιήσεων", ru: "Сохранить уведомления", de: "Benachrichtigungen speichern" },
+  "Hesap ayarları": { en: "Account settings", el: "Ρυθμίσεις λογαριασμού", ru: "Настройки аккаунта", de: "Kontoeinstellungen" },
+  "Klinik ve rezervasyon": { en: "Clinic & booking", el: "Κλινική & κρατήσεις", ru: "Клиника и бронирование", de: "Praxis & Buchung" },
+  "Güvenlik": { en: "Security", el: "Ασφάλεια", ru: "Безопасность", de: "Sicherheit" },
+  "Yeni şifre": { en: "New password", el: "Νέος κωδικός", ru: "Новый пароль", de: "Neues Passwort" },
+  "Şifre tekrar": { en: "Repeat password", el: "Επανάληψη κωδικού", ru: "Повторите пароль", de: "Passwort wiederholen" },
+  "Şifreyi değiştir": { en: "Change password", el: "Αλλαγή κωδικού", ru: "Изменить пароль", de: "Passwort ändern" },
+  "Platform Admin": { en: "Platform Admin", el: "Διαχειριστής Πλατφόρμας", ru: "Администратор платформы", de: "Plattform-Admin" },
+  "Global Yönetim": { en: "Global Administration", el: "Κεντρική Διαχείριση", ru: "Глобальное управление", de: "Globale Verwaltung" },
+  "Toplam klinik": { en: "Total clinics", el: "Σύνολο κλινικών", ru: "Всего клиник", de: "Praxen gesamt" },
+  "Pilot klinik": { en: "Pilot clinic", el: "Πιλοτική κλινική", ru: "Пилотная клиника", de: "Pilotpraxis" },
+  "Geçiş talebi": { en: "Conversion request", el: "Αίτημα μετάβασης", ru: "Запрос на переход", de: "Wechselanfrage" },
+  "Aktif kullanıcı": { en: "Active users", el: "Ενεργοί χρήστες", ru: "Активные пользователи", de: "Aktive Nutzer" },
+  "Aktif danışan": { en: "Active clients", el: "Ενεργοί πελάτες", ru: "Активные клиенты", de: "Aktive Klienten" },
+  "Yeni başvuru": { en: "New applications", el: "Νέες αιτήσεις", ru: "Новые заявки", de: "Neue Bewerbungen" },
+  "Açık geri bildirim": { en: "Open feedback", el: "Ανοιχτά σχόλια", ru: "Открытые отзывы", de: "Offenes Feedback" },
+  "Geçiş talepleri": { en: "Conversion Requests", el: "Αιτήματα Μετάβασης", ru: "Запросы на переход", de: "Wechselanfragen" },
+  "Pilot başvuruları": { en: "Pilot Applications", el: "Αιτήσεις Πιλοτικού", ru: "Пилотные заявки", de: "Pilotbewerbungen" },
+  "Pilot davetleri": { en: "Pilot Invitations", el: "Προσκλήσεις Πιλοτικού", ru: "Пилотные приглашения", de: "Piloteinladungen" },
+  "Geri bildirimler": { en: "Feedback", el: "Σχόλια", ru: "Отзывы", de: "Feedback" },
+  "Detayları gör": { en: "View details", el: "Προβολή λεπτομερειών", ru: "Подробнее", de: "Details anzeigen" },
+  "Kliniğe dön": { en: "Back to clinic", el: "Επιστροφή στην κλινική", ru: "Вернуться в клинику", de: "Zur Praxis zurück" },
+  "Plan / pilot": { en: "Plan / pilot", el: "Πλάνο / πιλοτικό", ru: "План / пилот", de: "Plan / Pilot" },
+  "Kullanım": { en: "Usage", el: "Χρήση", ru: "Использование", de: "Nutzung" },
+  "Klinik ve abonelik bilgileri": { en: "Clinic and subscription", el: "Κλινική και συνδρομή", ru: "Клиника и подписка", de: "Praxis und Abonnement" },
+  "Operasyon özeti": { en: "Operations summary", el: "Σύνοψη λειτουργίας", ru: "Операционная сводка", de: "Betriebsübersicht" },
+  "Finans özeti": { en: "Financial summary", el: "Οικονομική σύνοψη", ru: "Финансовая сводка", de: "Finanzübersicht" },
+  "Ekip üyeleri": { en: "Team members", el: "Μέλη ομάδας", ru: "Участники команды", de: "Teammitglieder" },
+  "Son danışan kayıtları": { en: "Recent clients", el: "Πρόσφατοι πελάτες", ru: "Последние клиенты", de: "Letzte Klienten" },
+  "Pilot geri bildirimleri": { en: "Pilot feedback", el: "Σχόλια πιλοτικού", ru: "Пилотные отзывы", de: "Pilotfeedback" },
+  "Cihazlar, odalar ve paketler": { en: "Devices, rooms and packages", el: "Συσκευές, αίθουσες και πακέτα", ru: "Устройства, кабинеты и пакеты", de: "Geräte, Räume und Pakete" },
+  "Ticari durum": { en: "Commercial status", el: "Εμπορική κατάσταση", ru: "Коммерческий статус", de: "Kommerzieller Status" },
+  "Pilot süresini yönet": { en: "Manage pilot period", el: "Διαχείριση πιλοτικής περιόδου", ru: "Управление пилотным периодом", de: "Pilotzeitraum verwalten" },
+  "Platform notları": { en: "Platform notes", el: "Σημειώσεις πλατφόρμας", ru: "Заметки платформы", de: "Plattformnotizen" },
+  "Son platform hareketleri": { en: "Recent platform activity", el: "Πρόσφατη δραστηριότητα", ru: "Последние действия", de: "Letzte Plattformaktivitäten" },
+  "Onayla ve kliniği aktif et": { en: "Approve and activate clinic", el: "Έγκριση και ενεργοποίηση κλινικής", ru: "Одобрить и активировать клинику", de: "Praxis genehmigen und aktivieren" },
+  "Talebi reddet": { en: "Reject request", el: "Απόρριψη αιτήματος", ru: "Отклонить запрос", de: "Anfrage ablehnen" },
+  "Süreyi uzat": { en: "Extend period", el: "Παράταση περιόδου", ru: "Продлить период", de: "Zeitraum verlängern" },
+  "Notu kaydet": { en: "Save note", el: "Αποθήκευση σημείωσης", ru: "Сохранить заметку", de: "Notiz speichern" },
+  "Ücretsiz Pilot": { en: "Free Pilot", el: "Δωρεάν Πιλοτικό", ru: "Бесплатный пилот", de: "Kostenloser Pilot" },
+  "Kurucu Klinik": { en: "Founder Clinic", el: "Ιδρυτική Κλινική", ru: "Клиника-основатель", de: "Gründerpraxis" },
+  "Başvurunuz alındı": { en: "Application received", el: "Η αίτησή σας ελήφθη", ru: "Заявка получена", de: "Bewerbung eingegangen" },
+  "Pilot erişim talebi": { en: "Pilot access request", el: "Αίτημα πιλοτικής πρόσβασης", ru: "Запрос пилотного доступа", de: "Anfrage auf Pilotzugang" },
+  "Pilot başvurusu gönder": { en: "Submit pilot application", el: "Υποβολή αίτησης πιλοτικού", ru: "Отправить пилотную заявку", de: "Pilotbewerbung senden" },
+  "Yeni başvuru gönder": { en: "Submit another application", el: "Νέα αίτηση", ru: "Отправить новую заявку", de: "Neue Bewerbung senden" },
+  "Klinik / marka adı": { en: "Clinic / brand name", el: "Όνομα κλινικής / επωνυμία", ru: "Клиника / бренд", de: "Praxis / Markenname" },
+  "Şehir / ülke": { en: "City / country", el: "Πόλη / χώρα", ru: "Город / страна", de: "Stadt / Land" },
+  "Ekip büyüklüğü": { en: "Team size", el: "Μέγεθος ομάδας", ru: "Размер команды", de: "Teamgröße" },
+  "Aktif danışan sayısı": { en: "Active client count", el: "Αριθμός ενεργών πελατών", ru: "Активные клиенты", de: "Aktive Klienten" },
+  "Notunuz": { en: "Your note", el: "Σημείωσή σας", ru: "Ваше сообщение", de: "Ihre Nachricht" },
+  "Başvuru türü": { en: "Applicant type", el: "Τύπος αιτούντος", ru: "Тип заявителя", de: "Bewerbertyp" },
+  "Bağımsız diyetisyen": { en: "Independent dietitian", el: "Ανεξάρτητος διαιτολόγος", ru: "Независимый диетолог", de: "Selbstständiger Ernährungsberater" },
+  "Klinik ekibi": { en: "Clinic team", el: "Ομάδα κλινικής", ru: "Команда клиники", de: "Praxisteam" },
+  "Diğer": { en: "Other", el: "Άλλο", ru: "Другое", de: "Sonstiges" },
+  "Çıkış": { en: "Sign out", el: "Αποσύνδεση", ru: "Выйти", de: "Abmelden" },
+  "Klinik kurulumu": { en: "Clinic setup", el: "Ρύθμιση κλινικής", ru: "Настройка клиники", de: "Praxiseinrichtung" },
+  "Pilot klinik oluştur": { en: "Create pilot clinic", el: "Δημιουργία πιλοτικής κλινικής", ru: "Создать пилотную клинику", de: "Pilotpraxis erstellen" },
+  "Mevcut kliniğe katıl": { en: "Join existing clinic", el: "Συμμετοχή σε υπάρχουσα κλινική", ru: "Присоединиться к клинике", de: "Bestehender Praxis beitreten" },
+  "Davet kodu": { en: "Invitation code", el: "Κωδικός πρόσκλησης", ru: "Код приглашения", de: "Einladungscode" },
+  "Klinik bağlantısı": { en: "Clinic URL", el: "Σύνδεσμος κλινικής", ru: "Ссылка клиники", de: "Praxis-URL" },
+  "Pilot kliniği oluştur": { en: "Create pilot clinic", el: "Δημιουργία πιλοτικής κλινικής", ru: "Создать пилотную клинику", de: "Pilotpraxis erstellen" },
+  "Kliniğe katıl": { en: "Join clinic", el: "Συμμετοχή στην κλινική", ru: "Присоединиться", de: "Praxis beitreten" },
+  "Klinik detayları": { en: "Clinic details", el: "Λεπτομέρειες κλινικής", ru: "Данные клиники", de: "Praxisdetails" },
+  "Eksik veya erişilemeyen platform verileri": { en: "Missing or unavailable platform data", el: "Δεδομένα πλατφόρμας που λείπουν ή δεν είναι διαθέσιμα", ru: "Отсутствующие или недоступные данные платформы", de: "Fehlende oder nicht verfügbare Plattformdaten" },
+  "Platform verileri yükleniyor…": { en: "Loading platform data…", el: "Φόρτωση δεδομένων πλατφόρμας…", ru: "Загрузка данных платформы…", de: "Plattformdaten werden geladen…" },
+  "Platform verileri alınamadı.": { en: "Platform data could not be loaded.", el: "Δεν ήταν δυνατή η φόρτωση των δεδομένων πλατφόρμας.", ru: "Не удалось загрузить данные платформы.", de: "Plattformdaten konnten nicht geladen werden." },
+  "Klinik workspace’leri": { en: "Clinic workspaces", el: "Χώροι εργασίας κλινικών", ru: "Рабочие пространства клиник", de: "Praxis-Workspaces" },
+  "Ekip, danışan, kullanım, finans ve abonelik durumunu yönetin.": { en: "Manage team, clients, usage, finances and subscription status.", el: "Διαχειριστείτε ομάδα, πελάτες, χρήση, οικονομικά και συνδρομή.", ru: "Управляйте командой, клиентами, использованием, финансами и подпиской.", de: "Verwalten Sie Team, Klienten, Nutzung, Finanzen und Abonnementstatus." },
+  "Klinik, plan veya durum ara": { en: "Search clinic, plan or status", el: "Αναζήτηση κλινικής, πλάνου ή κατάστασης", ru: "Поиск клиники, плана или статуса", de: "Praxis, Plan oder Status suchen" },
+  "Arama kriterine uygun klinik bulunamadı.": { en: "No clinic matches the search criteria.", el: "Δεν βρέθηκε κλινική που να ταιριάζει στα κριτήρια.", ru: "Клиник по заданным критериям не найдено.", de: "Keine Praxis entspricht den Suchkriterien." },
+  "Ücretli devam talebi": { en: "Paid continuation request", el: "Αίτημα συνέχισης επί πληρωμή", ru: "Запрос на платное продолжение", de: "Anfrage auf kostenpflichtige Fortsetzung" },
+  "İncele ve onayla": { en: "Review and approve", el: "Έλεγχος και έγκριση", ru: "Проверить и одобрить", de: "Prüfen und genehmigen" },
+  "Bekleyen geçiş talebi yok.": { en: "No pending conversion requests.", el: "Δεν υπάρχουν εκκρεμή αιτήματα μετάβασης.", ru: "Нет ожидающих запросов на переход.", de: "Keine ausstehenden Wechselanfragen." },
+  "Başvuruyu değerlendirin ve uygun kişiye özel pilot daveti oluşturun.": { en: "Review the application and create a personal pilot invitation for eligible applicants.", el: "Εξετάστε την αίτηση και δημιουργήστε προσωπική πιλοτική πρόσκληση για τους κατάλληλους αιτούντες.", ru: "Рассмотрите заявку и создайте персональное пилотное приглашение для подходящего кандидата.", de: "Prüfen Sie die Bewerbung und erstellen Sie für geeignete Personen eine persönliche Piloteinladung." },
+  "Başvuru durumu güncellendi.": { en: "Application status updated.", el: "Η κατάσταση της αίτησης ενημερώθηκε.", ru: "Статус заявки обновлён.", de: "Bewerbungsstatus aktualisiert." },
+  "Davet hazırla": { en: "Prepare invitation", el: "Προετοιμασία πρόσκλησης", ru: "Подготовить приглашение", de: "Einladung vorbereiten" },
+  "Henüz pilot başvurusu yok.": { en: "No pilot applications yet.", el: "Δεν υπάρχουν ακόμη αιτήσεις πιλοτικού.", ru: "Пилотных заявок пока нет.", de: "Noch keine Pilotbewerbungen." },
+  "Pilot daveti oluştur": { en: "Create pilot invitation", el: "Δημιουργία πιλοτικής πρόσκλησης", ru: "Создать пилотное приглашение", de: "Piloteinladung erstellen" },
+  "Etiket": { en: "Label", el: "Ετικέτα", ru: "Метка", de: "Bezeichnung" },
+  "Klinik veya kişi adı": { en: "Clinic or person name", el: "Όνομα κλινικής ή ατόμου", ru: "Название клиники или имя человека", de: "Praxis- oder Personenname" },
+  "Pilot süresi (gün)": { en: "Pilot period (days)", el: "Διάρκεια πιλοτικού (ημέρες)", ru: "Пилотный период (дни)", de: "Pilotzeitraum (Tage)" },
+  "Bağlantı geçerliliği (gün)": { en: "Link validity (days)", el: "Ισχύς συνδέσμου (ημέρες)", ru: "Срок действия ссылки (дни)", de: "Linkgültigkeit (Tage)" },
+  "Maksimum kullanım": { en: "Maximum uses", el: "Μέγιστες χρήσεις", ru: "Максимальное число использований", de: "Maximale Nutzungen" },
+  "Özel pilot bağlantısı oluştur": { en: "Create private pilot link", el: "Δημιουργία ιδιωτικού πιλοτικού συνδέσμου", ru: "Создать закрытую пилотную ссылку", de: "Privaten Pilotlink erstellen" },
+  "Pilot daveti oluşturuldu.": { en: "Pilot invitation created.", el: "Η πιλοτική πρόσκληση δημιουργήθηκε.", ru: "Пилотное приглашение создано.", de: "Piloteinladung erstellt." },
+  "Bağlantıyı kopyala": { en: "Copy link", el: "Αντιγραφή συνδέσμου", ru: "Копировать ссылку", de: "Link kopieren" },
+  "Kopyala": { en: "Copy", el: "Αντιγραφή", ru: "Копировать", de: "Kopieren" },
+  "Pasifleştir": { en: "Deactivate", el: "Απενεργοποίηση", ru: "Деактивировать", de: "Deaktivieren" },
+  "Aktifleştir": { en: "Activate", el: "Ενεργοποίηση", ru: "Активировать", de: "Aktivieren" },
+  "E-posta yok": { en: "No email", el: "Χωρίς email", ru: "Нет email", de: "Keine E-Mail" },
+  "Henüz geri bildirim yok.": { en: "No feedback yet.", el: "Δεν υπάρχουν ακόμη σχόλια.", ru: "Отзывов пока нет.", de: "Noch kein Feedback." },
+  "Geri bildirim durumu güncellendi.": { en: "Feedback status updated.", el: "Η κατάσταση σχολίου ενημερώθηκε.", ru: "Статус отзыва обновлён.", de: "Feedbackstatus aktualisiert." },
+  "İletişime geçildi": { en: "Contacted", el: "Έγινε επικοινωνία", ru: "Связались", de: "Kontaktiert" },
+  "Bekleme listesi": { en: "Waitlist", el: "Λίστα αναμονής", ru: "Лист ожидания", de: "Warteliste" },
+  "Reddedildi": { en: "Rejected", el: "Απορρίφθηκε", ru: "Отклонено", de: "Abgelehnt" },
+  "Kapalı": { en: "Closed", el: "Κλειστό", ru: "Закрыто", de: "Geschlossen" },
+  "İnceleniyor": { en: "Under review", el: "Υπό εξέταση", ru: "На рассмотрении", de: "In Prüfung" },
+  "Planlandı": { en: "Planned", el: "Προγραμματίστηκε", ru: "Запланировано", de: "Geplant" },
+  "Çözüldü": { en: "Resolved", el: "Επιλύθηκε", ru: "Решено", de: "Gelöst" },
+  "Klinik detayları yükleniyor…": { en: "Loading clinic details…", el: "Φόρτωση λεπτομερειών κλινικής…", ru: "Загрузка данных клиники…", de: "Praxisdetails werden geladen…" },
+  "Klinik detayları alınamadı.": { en: "Clinic details could not be loaded.", el: "Δεν ήταν δυνατή η φόρτωση των λεπτομερειών της κλινικής.", ru: "Не удалось загрузить данные клиники.", de: "Praxisdetails konnten nicht geladen werden." },
+  "Bazı detaylar yüklenemedi": { en: "Some details could not be loaded", el: "Ορισμένες λεπτομέρειες δεν φορτώθηκαν", ru: "Некоторые данные не удалось загрузить", de: "Einige Details konnten nicht geladen werden" },
+  "Plan": { en: "Plan", el: "Πλάνο", ru: "План", de: "Plan" },
+  "Abonelik durumu": { en: "Subscription status", el: "Κατάσταση συνδρομής", ru: "Статус подписки", de: "Abonnementstatus" },
+  "Pilot bitişi": { en: "Pilot end date", el: "Λήξη πιλοτικού", ru: "Окончание пилота", de: "Pilotende" },
+  "Ücretli onay": { en: "Paid approval", el: "Έγκριση επί πληρωμή", ru: "Одобрение платного доступа", de: "Kostenpflichtige Freigabe" },
+  "Yaklaşan randevu": { en: "Upcoming appointments", el: "Επερχόμενα ραντεβού", ru: "Предстоящие записи", de: "Bevorstehende Termine" },
+  "Tamamlanan": { en: "Completed", el: "Ολοκληρωμένα", ru: "Завершено", de: "Abgeschlossen" },
+  "Aktif menü": { en: "Active meal plans", el: "Ενεργά πλάνα διατροφής", ru: "Активные планы питания", de: "Aktive Ernährungspläne" },
+  "Ölçüm kaydı": { en: "Measurements", el: "Μετρήσεις", ru: "Измерения", de: "Messungen" },
+  "Aktif cihaz/oda": { en: "Active devices/rooms", el: "Ενεργές συσκευές/αίθουσες", ru: "Активные устройства/кабинеты", de: "Aktive Geräte/Räume" },
+  "Toplam randevu:": { en: "Total appointments:", el: "Σύνολο ραντεβού:", ru: "Всего записей:", de: "Termine gesamt:" },
+  "Aktif paket:": { en: "Active packages:", el: "Ενεργά πακέτα:", ru: "Активные пакеты:", de: "Aktive Pakete:" },
+  "Alınan": { en: "Received", el: "Εισπραχθέντα", ru: "Получено", de: "Erhalten" },
+  "Kalan": { en: "Remaining", el: "Υπόλοιπο", ru: "Остаток", de: "Verbleibend" },
+  "Aktif ekip üyesi yok.": { en: "No active team members.", el: "Δεν υπάρχουν ενεργά μέλη ομάδας.", ru: "Нет активных участников команды.", de: "Keine aktiven Teammitglieder." },
+  "Henüz danışan kaydı yok.": { en: "No client records yet.", el: "Δεν υπάρχουν ακόμη εγγραφές πελατών.", ru: "Клиентов пока нет.", de: "Noch keine Klienteneinträge." },
+  "İsimsiz kullanıcı": { en: "Unnamed user", el: "Ανώνυμος χρήστης", ru: "Пользователь без имени", de: "Unbenannter Nutzer" },
+  "İletişim bilgisi yok": { en: "No contact information", el: "Δεν υπάρχουν στοιχεία επικοινωνίας", ru: "Нет контактных данных", de: "Keine Kontaktdaten" },
+  "Bu klinikten henüz geri bildirim gelmedi.": { en: "No feedback has been received from this clinic yet.", el: "Δεν έχει ληφθεί ακόμη σχόλιο από αυτή την κλινική.", ru: "От этой клиники пока нет отзывов.", de: "Von dieser Praxis liegt noch kein Feedback vor." },
+  "Puan yok": { en: "No rating", el: "Χωρίς βαθμολογία", ru: "Нет оценки", de: "Keine Bewertung" },
+  "Sayfa bilgisi yok": { en: "No page information", el: "Δεν υπάρχουν πληροφορίες σελίδας", ru: "Нет данных о странице", de: "Keine Seitenangabe" },
+  "Pilot kliniği ücretli plana geçir": { en: "Convert pilot clinic to a paid plan", el: "Μετατροπή πιλοτικής κλινικής σε συνδρομητικό πλάνο", ru: "Перевести пилотную клинику на платный план", de: "Pilotpraxis in einen kostenpflichtigen Plan umwandeln" },
+  "Onay sonrasında klinik ve abonelik durumu Aktif olur; pilot geri sayımı temizlenir.": { en: "After approval, the clinic and subscription become active and the pilot countdown is cleared.", el: "Μετά την έγκριση, η κλινική και η συνδρομή ενεργοποιούνται και η αντίστροφη μέτρηση πιλοτικού διαγράφεται.", ru: "После одобрения клиника и подписка станут активными, а пилотный отсчёт будет удалён.", de: "Nach der Freigabe werden Praxis und Abonnement aktiv; der Pilot-Countdown wird entfernt." },
+  "Faturalama": { en: "Billing", el: "Χρέωση", ru: "Выставление счетов", de: "Abrechnung" },
+  "Aylık": { en: "Monthly", el: "Μηνιαία", ru: "Ежемесячно", de: "Monatlich" },
+  "Yıllık": { en: "Annual", el: "Ετήσια", ru: "Ежегодно", de: "Jährlich" },
+  "Manuel / özel anlaşma": { en: "Manual / custom agreement", el: "Χειροκίνητη / ειδική συμφωνία", ru: "Ручное / индивидуальное соглашение", de: "Manuell / Sondervereinbarung" },
+  "Manuel / özel": { en: "Manual / custom", el: "Χειροκίνητη / ειδική", ru: "Ручное / индивидуальное", de: "Manuell / individuell" },
+  "Anlaşılan tutar": { en: "Agreed amount", el: "Συμφωνημένο ποσό", ru: "Согласованная сумма", de: "Vereinbarter Betrag" },
+  "Anlaşılan tutar (₺)": { en: "Agreed amount (₺)", el: "Συμφωνημένο ποσό (₺)", ru: "Согласованная сумма (₺)", de: "Vereinbarter Betrag (₺)" },
+  "Onay / sözleşme notu": { en: "Approval / contract note", el: "Σημείωση έγκρισης / σύμβασης", ru: "Примечание к одобрению / договору", de: "Freigabe- / Vertragsnotiz" },
+  "Planı güncelle": { en: "Update plan", el: "Ενημέρωση πλάνου", ru: "Обновить план", de: "Plan aktualisieren" },
+  "Henüz platform notu yok.": { en: "No platform notes yet.", el: "Δεν υπάρχουν ακόμη σημειώσεις πλατφόρμας.", ru: "Заметок платформы пока нет.", de: "Noch keine Plattformnotizen." },
+  "Henüz hareket kaydı yok.": { en: "No activity records yet.", el: "Δεν υπάρχουν ακόμη καταγραφές δραστηριότητας.", ru: "Записей действий пока нет.", de: "Noch keine Aktivitätsprotokolle." },
+  "Dönem sonu": { en: "Period end", el: "Λήξη περιόδου", ru: "Конец периода", de: "Periodenende" },
+  "Dönem bilgisi yok": { en: "No period information", el: "Δεν υπάρχουν στοιχεία περιόδου", ru: "Нет данных о периоде", de: "Keine Periodenangabe" },
+  "Süresiz kurucu erişimi": { en: "Unlimited founder access", el: "Απεριόριστη πρόσβαση ιδρυτή", ru: "Бессрочный доступ основателя", de: "Unbefristeter Gründerzugang" },
+  "Sunucu boş veya geçersiz yanıt döndürdü.": { en: "The server returned an empty or invalid response.", el: "Ο διακομιστής επέστρεψε κενή ή μη έγκυρη απάντηση.", ru: "Сервер вернул пустой или некорректный ответ.", de: "Der Server hat eine leere oder ungültige Antwort zurückgegeben." },
+  "AI servisi geçersiz yanıt döndürdü.": { en: "The AI service returned an invalid response.", el: "Η υπηρεσία AI επέστρεψε μη έγκυρη απάντηση.", ru: "Сервис ИИ вернул некорректный ответ.", de: "Der KI-Dienst hat eine ungültige Antwort zurückgegeben." },
+  "· Pilot klinikler, planlar, ticari onaylar ve geri bildirimler": { en: "· Pilot clinics, plans, commercial approvals and feedback", el: "· Πιλοτικές κλινικές, πλάνα, εμπορικές εγκρίσεις και σχόλια", ru: "· Пилотные клиники, планы, коммерческие одобрения и отзывы", de: "· Pilotpraxen, Pläne, kommerzielle Freigaben und Feedback" },
+  "NUTRICLINIC AI PLATFORM": { en: "NUTRICLINIC AI PLATFORM", el: "ΠΛΑΤΦΟΡΜΑ NUTRICLINIC AI", ru: "ПЛАТФОРМА NUTRICLINIC AI", de: "NUTRICLINIC AI PLATTFORM" },
+  "TENANT YÖNETİMİ": { en: "TENANT MANAGEMENT", el: "ΔΙΑΧΕΙΡΙΣΗ ΜΙΣΘΩΤΩΝ", ru: "УПРАВЛЕНИЕ ТЕНАНТАМИ", de: "MANDANTENVERWALTUNG" },
+  "WEB BAŞVURULARI": { en: "WEB APPLICATIONS", el: "ΔΙΑΔΙΚΤΥΑΚΕΣ ΑΙΤΗΣΕΙΣ", ru: "ЗАЯВКИ С САЙТА", de: "WEB-BEWERBUNGEN" },
+  "ÖZEL BAĞLANTI": { en: "PRIVATE LINK", el: "ΙΔΙΩΤΙΚΟΣ ΣΥΝΔΕΣΜΟΣ", ru: "ПЕРСОНАЛЬНАЯ ССЫЛКА", de: "PRIVATER LINK" },
+  "DAVET GEÇMİŞİ": { en: "INVITATION HISTORY", el: "ΙΣΤΟΡΙΚΟ ΠΡΟΣΚΛΗΣΕΩΝ", ru: "ИСТОРИЯ ПРИГЛАШЕНИЙ", de: "EINLADUNGSVERLAUF" },
+  "PİLOT GERİ BİLDİRİMİ": { en: "PILOT FEEDBACK", el: "ΣΧΟΛΙΑ ΠΙΛΟΤΙΚΟΥ", ru: "ПИЛОТНЫЕ ОТЗЫВЫ", de: "PILOTFEEDBACK" },
+  "KLİNİK DETAYI": { en: "CLINIC DETAILS", el: "ΛΕΠΤΟΜΕΡΕΙΕΣ ΚΛΙΝΙΚΗΣ", ru: "ДАННЫЕ КЛИНИКИ", de: "PRAXISDETAILS" },
+  "ÜCRETLİ DÖNÜŞÜM": { en: "PAID CONVERSION", el: "ΜΕΤΑΒΑΣΗ ΕΠΙ ΠΛΗΡΩΜΗ", ru: "ПЕРЕХОД НА ПЛАТНЫЙ ТАРИФ", de: "KOSTENPFLICHTIGER WECHSEL" },
+  "ÜCRETLİ DEVAM TALEBİ": { en: "PAID CONTINUATION REQUEST", el: "ΑΙΤΗΜΑ ΣΥΝΕΧΙΣΗΣ ΕΠΙ ΠΛΗΡΩΜΗ", ru: "ЗАПРОС НА ПЛАТНОЕ ПРОДОЛЖЕНИЕ", de: "ANFRAGE AUF KOSTENPFLICHTIGE FORTSETZUNG" },
+  "TİCARİ ONAY": { en: "COMMERCIAL APPROVAL", el: "ΕΜΠΟΡΙΚΗ ΕΓΚΡΙΣΗ", ru: "КОММЕРЧЕСКОЕ ОДОБРЕНИЕ", de: "KOMMERZIELLE FREIGABE" },
+  "+30 gün": { en: "+30 days", el: "+30 ημέρες", ru: "+30 дней", de: "+30 Tage" },
+  "Pilot (süre yönetimi)": { en: "Pilot (period management)", el: "Πιλοτικό (διαχείριση περιόδου)", ru: "Пилот (управление сроком)", de: "Pilot (Zeitraumverwaltung)" },
+  "Klinik sahibinin ücretli devam isteğini inceleyip plan ve fiyatı onaylayın.": { en: "Review the clinic owner's paid continuation request and approve the plan and price.", el: "Εξετάστε το αίτημα συνέχισης επί πληρωμή του ιδιοκτήτη και εγκρίνετε το πλάνο και την τιμή.", ru: "Рассмотрите запрос владельца клиники и утвердите план и цену.", de: "Prüfen Sie die Anfrage des Praxisinhabers und genehmigen Sie Plan und Preis." },
+  "Özel pilot bağlantısı panoya kopyalandı.": { en: "The private pilot link was copied to the clipboard.", el: "Ο ιδιωτικός πιλοτικός σύνδεσμος αντιγράφηκε στο πρόχειρο.", ru: "Персональная пилотная ссылка скопирована.", de: "Der private Pilotlink wurde in die Zwischenablage kopiert." },
+  "Pilot etiketi zorunludur.": { en: "The pilot label is required.", el: "Η ετικέτα πιλοτικού είναι υποχρεωτική.", ru: "Название пилотного приглашения обязательно.", de: "Die Pilotbezeichnung ist erforderlich." },
+  "Klinik ücretli plana geçirildi ve erişimi onaylandı.": { en: "The clinic was moved to a paid plan and access was approved.", el: "Η κλινική μεταφέρθηκε σε συνδρομητικό πλάνο και η πρόσβαση εγκρίθηκε.", ru: "Клиника переведена на платный план, доступ одобрен.", de: "Die Praxis wurde auf einen kostenpflichtigen Plan umgestellt und freigeschaltet." },
+  "Klinik durumu güncellendi.": { en: "Clinic status updated.", el: "Η κατάσταση της κλινικής ενημερώθηκε.", ru: "Статус клиники обновлён.", de: "Praxisstatus aktualisiert." },
+  "Klinik Sahibi not bırakmadı.": { en: "The clinic owner did not leave a note.", el: "Ο ιδιοκτήτης της κλινικής δεν άφησε σημείωση.", ru: "Владелец клиники не оставил примечание.", de: "Der Praxisinhaber hat keine Notiz hinterlassen." },
+  "Klinik adı yok": { en: "No clinic name", el: "Δεν υπάρχει όνομα κλινικής", ru: "Название клиники не указано", de: "Kein Praxisname" },
+  "Şehir yok": { en: "No city", el: "Δεν υπάρχει πόλη", ru: "Город не указан", de: "Keine Stadt" },
+  "Bilinmeyen klinik": { en: "Unknown clinic", el: "Άγνωστη κλινική", ru: "Неизвестная клиника", de: "Unbekannte Praxis" },
+  "Davet aktifleştirildi.": { en: "Invitation activated.", el: "Η πρόσκληση ενεργοποιήθηκε.", ru: "Приглашение активировано.", de: "Einladung aktiviert." },
+  "Davet pasifleştirildi.": { en: "Invitation deactivated.", el: "Η πρόσκληση απενεργοποιήθηκε.", ru: "Приглашение деактивировано.", de: "Einladung deaktiviert." },
+  "Ödeme, deneme sonucu, özel fiyat veya sözleşme notu": { en: "Payment, trial outcome, special price or contract note", el: "Πληρωμή, αποτέλεσμα δοκιμής, ειδική τιμή ή σημείωση σύμβασης", ru: "Оплата, результат пилота, особая цена или примечание к договору", de: "Zahlung, Pilotergebnis, Sonderpreis oder Vertragsnotiz" },
+  "Ücretli devam talebi reddedilsin mi?": { en: "Reject the paid continuation request?", el: "Να απορριφθεί το αίτημα συνέχισης επί πληρωμή;", ru: "Отклонить запрос на платное продолжение?", de: "Anfrage auf kostenpflichtige Fortsetzung ablehnen?" },
+  "Ücretli devam talebi reddedildi.": { en: "The paid continuation request was rejected.", el: "Το αίτημα συνέχισης επί πληρωμή απορρίφθηκε.", ru: "Запрос на платное продолжение отклонён.", de: "Die Anfrage auf kostenpflichtige Fortsetzung wurde abgelehnt." },
+  "Klinik planı değiştirilsin mi?": { en: "Change the clinic plan?", el: "Να αλλάξει το πλάνο της κλινικής;", ru: "Изменить план клиники?", de: "Praxisplan ändern?" },
+  "Klinik planı güncellendi.": { en: "Clinic plan updated.", el: "Το πλάνο της κλινικής ενημερώθηκε.", ru: "План клиники обновлён.", de: "Praxisplan aktualisiert." },
+  "Klinikle yapılan görüşme, özel şart veya takip notu": { en: "Meeting, special condition or follow-up note for the clinic", el: "Συνάντηση, ειδικός όρος ή σημείωση παρακολούθησης για την κλινική", ru: "Встреча, особое условие или заметка по клинике", de: "Gespräch, Sonderbedingung oder Nachverfolgungsnotiz zur Praxis" },
+  "Klinik notu kaydedildi.": { en: "Clinic note saved.", el: "Η σημείωση κλινικής αποθηκεύτηκε.", ru: "Заметка клиники сохранена.", de: "Praxisnotiz gespeichert." },
+  "Abonelik:": { en: "Subscription:", el: "Συνδρομή:", ru: "Подписка:", de: "Abonnement:" },
+  "E-posta": { en: "Email", el: "Email", ru: "Email", de: "E-Mail" },
+  "Telefon": { en: "Phone", el: "Τηλέφωνο", ru: "Телефон", de: "Telefon" },
+  "İptal:": { en: "Cancelled:", el: "Ακυρώθηκαν:", ru: "Отменено:", de: "Storniert:" },
+  "Gelmedi:": { en: "No-show:", el: "Δεν προσήλθαν:", ru: "Неявка:", de: "Nicht erschienen:" },
+  "Ödeme Gecikmiş": { en: "Past Due", el: "Εκπρόθεσμη πληρωμή", ru: "Просроченная оплата", de: "Überfällig" },
+  "İptal Edildi": { en: "Cancelled", el: "Ακυρώθηκε", ru: "Отменено", de: "Storniert" },
+  "Süresi doldu": { en: "Expired", el: "Έληξε", ru: "Срок истёк", de: "Abgelaufen" },
+  "Klinik adı en az 2 karakter olmalıdır.": { en: "Clinic name must be at least 2 characters.", el: "Το όνομα κλινικής πρέπει να έχει τουλάχιστον 2 χαρακτήρες.", ru: "Название клиники должно содержать не менее 2 символов.", de: "Der Praxisname muss mindestens 2 Zeichen lang sein." },
+  "Ad soyad en az 2 karakter olmalıdır.": { en: "Full name must be at least 2 characters.", el: "Το ονοματεπώνυμο πρέπει να έχει τουλάχιστον 2 χαρακτήρες.", ru: "Имя должно содержать не менее 2 символов.", de: "Der vollständige Name muss mindestens 2 Zeichen lang sein." },
+  "E-posta adresi geçersiz.": { en: "The email address is invalid.", el: "Η διεύθυνση email δεν είναι έγκυρη.", ru: "Некорректный адрес электронной почты.", de: "Die E-Mail-Adresse ist ungültig." },
+  "Panel dili geçersiz.": { en: "The panel language is invalid.", el: "Η γλώσσα του πίνακα δεν είναι έγκυρη.", ru: "Некорректный язык панели.", de: "Die Oberflächensprache ist ungültig." },
+  "Panel dili kaydedilemedi.": { en: "The panel language could not be saved.", el: "Δεν ήταν δυνατή η αποθήκευση της γλώσσας του πίνακα.", ru: "Не удалось сохранить язык панели.", de: "Die Oberflächensprache konnte nicht gespeichert werden." },
+  "Boy 80 ile 250 cm arasında olmalıdır.": { en: "Height must be between 80 and 250 cm.", el: "Το ύψος πρέπει να είναι μεταξύ 80 και 250 cm.", ru: "Рост должен быть от 80 до 250 см.", de: "Die Körpergröße muss zwischen 80 und 250 cm liegen." },
+  "Randevu ufku 1 ile 365 gün arasında olmalıdır.": { en: "The booking horizon must be between 1 and 365 days.", el: "Ο ορίζοντας κρατήσεων πρέπει να είναι μεταξύ 1 και 365 ημερών.", ru: "Горизонт записи должен быть от 1 до 365 дней.", de: "Der Buchungshorizont muss zwischen 1 und 365 Tagen liegen." },
+  "Minimum rezervasyon süresi 0 ile 720 saat arasında olmalıdır.": { en: "The minimum booking notice must be between 0 and 720 hours.", el: "Η ελάχιστη προειδοποίηση κράτησης πρέπει να είναι μεταξύ 0 και 720 ωρών.", ru: "Минимальный срок записи должен быть от 0 до 720 часов.", de: "Die Mindestvorlaufzeit muss zwischen 0 und 720 Stunden liegen." },
+  "İptal süresi 0 ile 720 saat arasında olmalıdır.": { en: "The cancellation notice must be between 0 and 720 hours.", el: "Η προθεσμία ακύρωσης πρέπει να είναι μεταξύ 0 και 720 ωρών.", ru: "Срок отмены должен быть от 0 до 720 часов.", de: "Die Stornierungsfrist muss zwischen 0 und 720 Stunden liegen." },
+  "Randevu süresi 10 ile 240 dakika arasında olmalıdır.": { en: "Appointment duration must be between 10 and 240 minutes.", el: "Η διάρκεια ραντεβού πρέπει να είναι μεταξύ 10 και 240 λεπτών.", ru: "Длительность приёма должна быть от 10 до 240 минут.", de: "Die Termindauer muss zwischen 10 und 240 Minuten liegen." },
+  "Mola süresi 0 ile 120 dakika arasında olmalıdır.": { en: "Buffer time must be between 0 and 120 minutes.", el: "Ο χρόνος διαλείμματος πρέπει να είναι μεταξύ 0 και 120 λεπτών.", ru: "Перерыв должен быть от 0 до 120 минут.", de: "Die Pufferzeit muss zwischen 0 und 120 Minuten liegen." },
+  "Unvan en az 2 karakter olmalıdır.": { en: "Title must be at least 2 characters.", el: "Ο τίτλος πρέπει να έχει τουλάχιστον 2 χαρακτήρες.", ru: "Должность должна содержать не менее 2 символов.", de: "Die Bezeichnung muss mindestens 2 Zeichen lang sein." },
+  "Hesap ayarları kaydedildi.": { en: "Account settings saved.", el: "Οι ρυθμίσεις λογαριασμού αποθηκεύτηκαν.", ru: "Настройки аккаунта сохранены.", de: "Kontoeinstellungen gespeichert." },
+  "Klinik ayarları kaydedildi.": { en: "Clinic settings saved.", el: "Οι ρυθμίσεις κλινικής αποθηκεύτηκαν.", ru: "Настройки клиники сохранены.", de: "Praxiseinstellungen gespeichert." },
+  "Diyetisyen ayarları kaydedildi.": { en: "Dietitian settings saved.", el: "Οι ρυθμίσεις διαιτολόγου αποθηκεύτηκαν.", ru: "Настройки диетолога сохранены.", de: "Ernährungsberater-Einstellungen gespeichert." },
+  "Danışan profiliniz güncellendi.": { en: "Your client profile was updated.", el: "Το προφίλ πελάτη ενημερώθηκε.", ru: "Профиль клиента обновлён.", de: "Ihr Klientenprofil wurde aktualisiert." },
+  "E-posta bildirimleri": { en: "Email notifications", el: "Ειδοποιήσεις email", ru: "Уведомления по email", de: "E-Mail-Benachrichtigungen" },
+  "Randevu hatırlatmaları": { en: "Appointment reminders", el: "Υπενθυμίσεις ραντεβού", ru: "Напоминания о записях", de: "Terminerinnerungen" },
+  "Öğün hatırlatmaları": { en: "Meal reminders", el: "Υπενθυμίσεις γευμάτων", ru: "Напоминания о приёмах пищи", de: "Mahlzeitenerinnerungen" },
+  "Haftalık özet": { en: "Weekly summary", el: "Εβδομαδιαία σύνοψη", ru: "Еженедельная сводка", de: "Wochenübersicht" },
+  "SMS bildirimleri": { en: "SMS notifications", el: "Ειδοποιήσεις SMS", ru: "SMS-уведомления", de: "SMS-Benachrichtigungen" },
+  "Randevu değişiklikleri": { en: "Appointment changes", el: "Αλλαγές ραντεβού", ru: "Изменения записей", de: "Terminänderungen" },
+  "Sadakat bildirimleri": { en: "Loyalty notifications", el: "Ειδοποιήσεις επιβράβευσης", ru: "Уведомления программы лояльности", de: "Treue-Benachrichtigungen" },
+  "İlerleme analizleri": { en: "Progress insights", el: "Αναλύσεις προόδου", ru: "Аналитика прогресса", de: "Fortschrittsanalysen" },
+  "Danışan profili": { en: "Client profile", el: "Προφίλ πελάτη", ru: "Профиль клиента", de: "Klientenprofil" },
+  "Doğum tarihi": { en: "Date of birth", el: "Ημερομηνία γέννησης", ru: "Дата рождения", de: "Geburtsdatum" },
+  "Cinsiyet": { en: "Gender", el: "Φύλο", ru: "Пол", de: "Geschlecht" },
+  "Kadın": { en: "Female", el: "Γυναίκα", ru: "Женский", de: "Weiblich" },
+  "Erkek": { en: "Male", el: "Άνδρας", ru: "Мужской", de: "Männlich" },
+  "Hedef": { en: "Goal", el: "Στόχος", ru: "Цель", de: "Ziel" },
+  "Alerjiler": { en: "Allergies", el: "Αλλεργίες", ru: "Аллергии", de: "Allergien" },
+  "Sağlık notları": { en: "Health notes", el: "Σημειώσεις υγείας", ru: "Медицинские заметки", de: "Gesundheitsnotizen" },
+  "Kullanılan ilaçlar": { en: "Medications", el: "Φάρμακα", ru: "Лекарства", de: "Medikamente" },
+  "Diyetisyen profili": { en: "Dietitian profile", el: "Προφίλ διαιτολόγου", ru: "Профиль диетолога", de: "Ernährungsberaterprofil" },
+  "Unvan": { en: "Title", el: "Τίτλος", ru: "Должность", de: "Bezeichnung" },
+  "Kayıt numarası": { en: "Registration number", el: "Αριθμός μητρώου", ru: "Регистрационный номер", de: "Registrierungsnummer" },
+  "Randevu süresi": { en: "Appointment duration", el: "Διάρκεια ραντεβού", ru: "Длительность приёма", de: "Termindauer" },
+  "Mola süresi": { en: "Buffer time", el: "Χρόνος διαλείμματος", ru: "Перерыв", de: "Pufferzeit" },
+  "Rezervasyona açık": { en: "Available for booking", el: "Διαθέσιμο για κράτηση", ru: "Доступен для записи", de: "Buchbar" },
+  "Şifre değiştirildi.": { en: "Password changed.", el: "Ο κωδικός άλλαξε.", ru: "Пароль изменён.", de: "Passwort geändert." },
+  "Şifre en az 8 karakter olmalı.": { en: "Password must be at least 8 characters.", el: "Ο κωδικός πρέπει να έχει τουλάχιστον 8 χαρακτήρες.", ru: "Пароль должен содержать не менее 8 символов.", de: "Das Passwort muss mindestens 8 Zeichen lang sein." },
+  "Şifreler eşleşmiyor.": { en: "Passwords do not match.", el: "Οι κωδικοί δεν ταιριάζουν.", ru: "Пароли не совпадают.", de: "Die Passwörter stimmen nicht überein." },
+  "Günün motivasyonu": { en: "Daily motivation", el: "Καθημερινό κίνητρο", ru: "Мотивация дня", de: "Tagesmotivation" },
+  "Günüme başla": { en: "Start my day", el: "Ξεκινήστε τη μέρα μου", ru: "Начать день", de: "Meinen Tag beginnen" },
+  "Başvurunuzu inceleyip uygun bulunması hâlinde size özel pilot bağlantısını e-posta yoluyla göndereceğiz.": { en: "We will review your application and email you a private pilot link if it is approved.", el: "Θα εξετάσουμε την αίτησή σας και, εφόσον εγκριθεί, θα σας στείλουμε ιδιωτικό πιλοτικό σύνδεσμο μέσω email.", ru: "Мы рассмотрим заявку и при одобрении отправим персональную пилотную ссылку по электронной почте.", de: "Wir prüfen Ihre Bewerbung und senden Ihnen bei Freigabe einen privaten Pilotlink per E-Mail." },
+  "Bilgiler yalnızca pilot değerlendirmesi ve iletişim amacıyla kullanılır.": { en: "The information is used only for pilot evaluation and communication.", el: "Οι πληροφορίες χρησιμοποιούνται μόνο για αξιολόγηση πιλοτικού και επικοινωνία.", ru: "Данные используются только для оценки пилота и связи.", de: "Die Angaben werden ausschließlich zur Pilotbewertung und Kontaktaufnahme verwendet." },
+  "Başvuru gönderilemedi.": { en: "The application could not be submitted.", el: "Δεν ήταν δυνατή η υποβολή της αίτησης.", ru: "Не удалось отправить заявку.", de: "Die Bewerbung konnte nicht gesendet werden." },
+  "Oturum gerekli.": { en: "Authentication required.", el: "Απαιτείται σύνδεση.", ru: "Требуется вход.", de: "Anmeldung erforderlich." },
+  "Geçersiz istek kaynağı.": { en: "Invalid request origin.", el: "Μη έγκυρη προέλευση αιτήματος.", ru: "Недопустимый источник запроса.", de: "Ungültige Anfragequelle." },
+  "Geçersiz istek.": { en: "Invalid request.", el: "Μη έγκυρο αίτημα.", ru: "Некорректный запрос.", de: "Ungültige Anfrage." },
+  "İstek verisi çok büyük.": { en: "The request payload is too large.", el: "Τα δεδομένα του αιτήματος είναι πολύ μεγάλα.", ru: "Слишком большой объём данных.", de: "Die Anfragedaten sind zu groß." },
+  "Ödeme kaydı geçersiz.": { en: "The payment record is invalid.", el: "Η εγγραφή πληρωμής δεν είναι έγκυρη.", ru: "Некорректная запись платежа.", de: "Der Zahlungseintrag ist ungültig." },
+  "Hatırlatma gönderme yetkiniz yok.": { en: "You are not authorized to send reminders.", el: "Δεν έχετε δικαίωμα αποστολής υπενθυμίσεων.", ru: "У вас нет прав на отправку напоминаний.", de: "Sie sind nicht berechtigt, Erinnerungen zu senden." },
+  "Ödeme bulunamadı.": { en: "Payment not found.", el: "Η πληρωμή δεν βρέθηκε.", ru: "Платёж не найден.", de: "Zahlung nicht gefunden." },
+  "Danışan veya klinik bulunamadı.": { en: "Client or clinic not found.", el: "Ο πελάτης ή η κλινική δεν βρέθηκε.", ru: "Клиент или клиника не найдены.", de: "Klient oder Praxis nicht gefunden." },
+  "Bu danışan size bağlı değil.": { en: "This client is not assigned to you.", el: "Αυτός ο πελάτης δεν σας έχει ανατεθεί.", ru: "Этот клиент не закреплён за вами.", de: "Dieser Klient ist Ihnen nicht zugewiesen." },
+  "Danışanın e-posta adresi yok.": { en: "The client has no email address.", el: "Ο πελάτης δεν έχει διεύθυνση email.", ru: "У клиента нет адреса электронной почты.", de: "Für den Klienten ist keine E-Mail-Adresse hinterlegt." },
+  "Danışanın telefon numarası yok.": { en: "The client has no phone number.", el: "Ο πελάτης δεν έχει αριθμό τηλεφώνου.", ru: "У клиента нет номера телефона.", de: "Für den Klienten ist keine Telefonnummer hinterlegt." },
+  "Hatırlatma gönderilemedi.": { en: "The reminder could not be sent.", el: "Δεν ήταν δυνατή η αποστολή της υπενθύμισης.", ru: "Не удалось отправить напоминание.", de: "Die Erinnerung konnte nicht gesendet werden." },
+  "Profesyonel": { en: "Professional", el: "Επαγγελματικό", ru: "Профессиональный", de: "Professional" },
+  "Pilot Klinik": { en: "Pilot Clinic", el: "Πιλοτική Κλινική", ru: "Пилотная клиника", de: "Pilotpraxis" },
+  "Aktif ücretli plan bulunamadı.": { en: "No active paid plan was found.", el: "Δεν βρέθηκε ενεργό συνδρομητικό πλάνο.", ru: "Активный платный план не найден.", de: "Es wurde kein aktiver kostenpflichtiger Plan gefunden." },
+  "Anlaşılan fiyat geçersiz.": { en: "The agreed price is invalid.", el: "Η συμφωνημένη τιμή δεν είναι έγκυρη.", ru: "Согласованная цена некорректна.", de: "Der vereinbarte Preis ist ungültig." },
+  "Pilot uzatma günü 1 ile 365 arasında olmalıdır.": { en: "Pilot extension must be between 1 and 365 days.", el: "Η παράταση πιλοτικού πρέπει να είναι μεταξύ 1 και 365 ημερών.", ru: "Продление пилота должно быть от 1 до 365 дней.", de: "Die Pilotverlängerung muss zwischen 1 und 365 Tagen liegen." },
+  "Klinik detayları alınamadı": { en: "Clinic details could not be loaded", el: "Δεν ήταν δυνατή η φόρτωση των λεπτομερειών κλινικής", ru: "Не удалось загрузить данные клиники", de: "Praxisdetails konnten nicht geladen werden" },
+};
+
+const patterns: Array<{
+  pattern: RegExp;
+  render: Record<Exclude<Locale, "tr">, (match: RegExpMatchArray) => string>;
+}> = [
+  {
+    pattern: /^(\d+) gün kaldı$/,
+    render: {
+      en: (m) => `${m[1]} days left`, el: (m) => `Απομένουν ${m[1]} ημέρες`, ru: (m) => `Осталось ${m[1]} дн.`, de: (m) => `Noch ${m[1]} Tage`,
+    },
+  },
+  {
+    pattern: /^(\d+) gün gecikti$/,
+    render: {
+      en: (m) => `${m[1]} days overdue`, el: (m) => `Καθυστέρηση ${m[1]} ημερών`, ru: (m) => `Просрочено на ${m[1]} дн.`, de: (m) => `${m[1]} Tage überfällig`,
+    },
+  },
+  {
+    pattern: /^(\d+) aktif$/,
+    render: {
+      en: (m) => `${m[1]} active`, el: (m) => `${m[1]} ενεργά`, ru: (m) => `${m[1]} активных`, de: (m) => `${m[1]} aktiv`,
+    },
+  },
+  {
+    pattern: /^(\d+) kayıt$/,
+    render: {
+      en: (m) => `${m[1]} records`, el: (m) => `${m[1]} εγγραφές`, ru: (m) => `${m[1]} записей`, de: (m) => `${m[1]} Einträge`,
+    },
+  },
+  {
+    pattern: /^Toplam · (.+)$/,
+    render: {
+      en: (m) => `Total · ${m[1]}`, el: (m) => `Σύνολο · ${m[1]}`, ru: (m) => `Итого · ${m[1]}`, de: (m) => `Gesamt · ${m[1]}`,
+    },
+  },
+  {
+    pattern: /^Dönem sonu: (.+)$/,
+    render: {
+      en: (m) => `Period ends: ${m[1]}`, el: (m) => `Λήξη περιόδου: ${m[1]}`, ru: (m) => `Конец периода: ${m[1]}`, de: (m) => `Periodenende: ${m[1]}`,
+    },
+  },
+  {
+    pattern: /^Onay: (.+)$/,
+    render: {
+      en: (m) => `Approved: ${m[1]}`, el: (m) => `Έγκριση: ${m[1]}`, ru: (m) => `Одобрено: ${m[1]}`, de: (m) => `Genehmigt: ${m[1]}`,
+    },
+  },
+  {
+    pattern: /^(.+)\/ay$/,
+    render: {
+      en: (m) => `${m[1]}/month`, el: (m) => `${m[1]}/μήνα`, ru: (m) => `${m[1]}/мес.`, de: (m) => `${m[1]}/Monat`,
+    },
+  },
+  {
+    pattern: /^(\d+)\/(\d+) kullanım$/,
+    render: {
+      en: (m) => `${m[1]}/${m[2]} uses`, el: (m) => `${m[1]}/${m[2]} χρήσεις`, ru: (m) => `${m[1]}/${m[2]} использований`, de: (m) => `${m[1]}/${m[2]} Nutzungen`,
+    },
+  },
+  {
+    pattern: /^Pilot erişimin bitmesine (\d+) gün kaldı\. Pilot süresince geri bildirimleriniz ürün yol haritasına doğrudan girer\.$/,
+    render: {
+      en: (m) => `${m[1]} days remain in your pilot. During the pilot, your feedback goes directly into the product roadmap.`,
+      el: (m) => `Απομένουν ${m[1]} ημέρες για το πιλοτικό σας. Κατά τη διάρκεια του πιλοτικού, τα σχόλιά σας εντάσσονται απευθείας στον οδικό χάρτη του προϊόντος.`,
+      ru: (m) => `До окончания пилотного периода осталось ${m[1]} дн. Во время пилота ваши отзывы напрямую попадают в дорожную карту продукта.`,
+      de: (m) => `Ihr Pilotzeitraum läuft noch ${m[1]} Tage. Während des Piloten fließt Ihr Feedback direkt in die Produkt-Roadmap ein.`,
+    },
+  },
+  {
+    pattern: /^Pilot (\d+) gün uzatıldı\.$/,
+    render: {
+      en: (m) => `Pilot extended by ${m[1]} days.`, el: (m) => `Το πιλοτικό παρατάθηκε κατά ${m[1]} ημέρες.`, ru: (m) => `Пилот продлён на ${m[1]} дн.`, de: (m) => `Pilotzeitraum um ${m[1]} Tage verlängert.`,
+    },
+  },
+  {
+    pattern: /^(.+) kliniğini (.+) planında aktif etmek istediğinize emin misiniz\?$/,
+    render: {
+      en: (m) => `Are you sure you want to activate ${m[1]} on the ${m[2]} plan?`,
+      el: (m) => `Είστε βέβαιοι ότι θέλετε να ενεργοποιήσετε την κλινική ${m[1]} στο πλάνο ${m[2]};`,
+      ru: (m) => `Активировать клинику «${m[1]}» на плане «${m[2]}»?`,
+      de: (m) => `Möchten Sie ${m[1]} wirklich im Plan ${m[2]} aktivieren?`,
+    },
+  },
+  {
+    pattern: /^(.+) kliniğinin durumu “(.+)” olarak değiştirilsin mi\?$/,
+    render: {
+      en: (m) => `Change the status of ${m[1]} to “${m[2]}”?`,
+      el: (m) => `Να αλλάξει η κατάσταση της κλινικής ${m[1]} σε «${m[2]}»;`,
+      ru: (m) => `Изменить статус клиники «${m[1]}» на «${m[2]}»?`,
+      de: (m) => `Status von ${m[1]} auf „${m[2]}“ ändern?`,
+    },
+  },
+  {
+    pattern: /^(\d+)\/(\d+) kaynak aktif$/,
+    render: {
+      en: (m) => `${m[1]}/${m[2]} resources active`, el: (m) => `${m[1]}/${m[2]} ενεργοί πόροι`, ru: (m) => `${m[1]}/${m[2]} ресурсов активно`, de: (m) => `${m[1]}/${m[2]} Ressourcen aktiv`,
+    },
+  },
+  {
+    pattern: /^(\d+)\/(\d+) paket aktif$/,
+    render: {
+      en: (m) => `${m[1]}/${m[2]} packages active`, el: (m) => `${m[1]}/${m[2]} ενεργά πακέτα`, ru: (m) => `${m[1]}/${m[2]} пакетов активно`, de: (m) => `${m[1]}/${m[2]} Pakete aktiv`,
+    },
+  },
+  {
+    pattern: /^Sunucu hatası \((\d+)\)$/,
+    render: {
+      en: (m) => `Server error (${m[1]})`, el: (m) => `Σφάλμα διακομιστή (${m[1]})`, ru: (m) => `Ошибка сервера (${m[1]})`, de: (m) => `Serverfehler (${m[1]})`,
+    },
+  },
+];
+
+export function translateUiText(source: string, locale: Locale): string {
+  if (locale === "tr" || !source.trim()) return source;
+  const leading = source.match(/^\s*/)?.[0] || "";
+  const trailing = source.match(/\s*$/)?.[0] || "";
+  const core = source.trim();
+  const exact = phraseCatalogue[core]?.[locale];
+  if (exact) return `${leading}${exact}${trailing}`;
+  for (const entry of patterns) {
+    const match = core.match(entry.pattern);
+    if (match) return `${leading}${entry.render[locale](match)}${trailing}`;
+  }
+  return source;
+}
